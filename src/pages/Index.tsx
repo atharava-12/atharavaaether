@@ -38,7 +38,7 @@ const Index = () => {
               Awaiting instruction...
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-md font-mono">
-              Multilingual Q&A · Image synthesis · Cloud-connected
+              Multilingual Q&A · Image synthesis · Video generation · Cloud-connected
             </p>
             <div className="flex items-center gap-4 mt-6">
               <span className="text-[11px] font-mono text-muted-foreground/50 tracking-wider">
@@ -56,7 +56,7 @@ const Index = () => {
               <ResultModule
                 key={msg.id}
                 type={msg.type}
-                label={msg.mode === "image" ? "IMAGE SYNTHESIS" : "RESPONSE"}
+                label={msg.mode === "image" ? "IMAGE SYNTHESIS" : msg.mode === "video" ? "VIDEO GENERATION" : "RESPONSE"}
                 meta={msg.meta}
                 content={msg.content}
                 imageUrl={msg.imageUrl}

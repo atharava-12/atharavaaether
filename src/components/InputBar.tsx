@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { CornerDownLeft, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { CornerDownLeft, Image as ImageIcon, MessageSquare, Video } from "lucide-react";
 
 interface InputBarProps {
-  onSubmit: (message: string, mode: "chat" | "image") => void;
+  onSubmit: (message: string, mode: "chat" | "image" | "video") => void;
   isLoading: boolean;
 }
 
 const InputBar = ({ onSubmit, isLoading }: InputBarProps) => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"chat" | "image">("chat");
+  const [mode, setMode] = useState<"chat" | "image" | "video">("chat");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -58,6 +58,17 @@ const InputBar = ({ onSubmit, isLoading }: InputBarProps) => {
             <ImageIcon size={12} />
             IMAGE
           </button>
+          <button
+            onClick={() => setMode("video")}
+            className={`flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide transition-colors ${
+              mode === "video"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-surface-hover"
+            }`}
+          >
+            <Video size={12} />
+            VIDEO
+          </button>
         </div>
 
         {/* Input area */}
@@ -70,7 +81,9 @@ const InputBar = ({ onSubmit, isLoading }: InputBarProps) => {
             placeholder={
               mode === "chat"
                 ? "Ask anything in any language..."
-                : "Describe the image you want to generate..."
+                : mode === "image"
+                ? "Describe the image you want to generate..."
+                : "Describe the video you want to generate..."
             }
             rows={1}
             disabled={isLoading}
