@@ -8,7 +8,7 @@ interface InputBarProps {
 
 const InputBar = ({ onSubmit, isLoading }: InputBarProps) => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"chat" | "image">("chat");
+  const [mode, setMode] = useState<"chat" | "image" | "video">("chat");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
