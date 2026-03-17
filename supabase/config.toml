@@ -1,0 +1,7 @@
+project_id = "uqtwfooizzkleyvozaeu"
+
+[functions.aether-chat]
+verify_jwt = false
+
+[functions.aether-image]
+verify_jwt = false
