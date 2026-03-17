@@ -19,7 +19,7 @@ export function useAether() {
   const [latency, setLatency] = useState<number | undefined>();
   const abortRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (input: string, mode: "chat" | "image") => {
+  const sendMessage = useCallback(async (input: string, mode: "chat" | "image" | "video") => {
     const userMsg: AetherMessage = {
       id: crypto.randomUUID(),
       role: "user",
