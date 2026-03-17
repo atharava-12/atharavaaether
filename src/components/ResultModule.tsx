@@ -18,7 +18,7 @@ const moduleVariant = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: "spring", duration: 0.4, bounce: 0 },
+    transition: { type: "spring" as const, duration: 0.4, bounce: 0 },
   },
 };
 
