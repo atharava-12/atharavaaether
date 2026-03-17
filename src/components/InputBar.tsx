@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { CornerDownLeft, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { CornerDownLeft, Image as ImageIcon, MessageSquare, Video } from "lucide-react";
 
 interface InputBarProps {
   onSubmit: (message: string, mode: "chat" | "image") => void;
