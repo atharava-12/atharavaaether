@@ -35,7 +35,7 @@ const ResultModule = ({ type, label, meta, content, imageUrl, isStreaming }: Res
     if (!imageUrl) return;
     const a = document.createElement("a");
     a.href = imageUrl;
-    a.download = "aether-generated.png";
+    a.download = "chitchat-generated.png";
     a.click();
   };
 

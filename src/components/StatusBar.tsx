@@ -10,7 +10,7 @@ const StatusBar = ({ isConnected, latency }: StatusBarProps) => {
     <header className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center justify-between px-6 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="flex items-center gap-2">
         <Zap size={14} className="text-primary" />
-        <span className="text-sm font-semibold tracking-[-0.03em]">AETHER</span>
+        <span className="text-sm font-semibold tracking-[-0.03em]">CHITCHAT</span>
       </div>
 
       <div className="flex items-center gap-4">
