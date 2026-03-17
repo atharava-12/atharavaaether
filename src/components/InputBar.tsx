@@ -81,7 +81,9 @@ const InputBar = ({ onSubmit, isLoading }: InputBarProps) => {
             placeholder={
               mode === "chat"
                 ? "Ask anything in any language..."
-                : "Describe the image you want to generate..."
+                : mode === "image"
+                ? "Describe the image you want to generate..."
+                : "Describe the video you want to generate..."
             }
             rows={1}
             disabled={isLoading}
