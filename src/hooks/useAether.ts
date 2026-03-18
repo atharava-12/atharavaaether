@@ -234,5 +234,10 @@ export function useAether() {
     setIsLoading(false);
   }, [messages]);
 
-  return { messages, isLoading, latency, sendMessage };
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    setLatency(undefined);
+  }, []);
+
+  return { messages, isLoading, latency, sendMessage, clearMessages };
 }
