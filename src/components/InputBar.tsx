@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { CornerDownLeft, Image as ImageIcon, MessageSquare, Video, Mic, MicOff } from "lucide-react";
+import { CornerDownLeft, Image as ImageIcon, MessageSquare, Mic, MicOff } from "lucide-react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 
 interface InputBarProps {
