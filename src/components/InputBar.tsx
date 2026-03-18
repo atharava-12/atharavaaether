@@ -10,7 +10,7 @@ interface InputBarProps {
 
 const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"chat" | "image" | "video">("chat");
+  const [mode, setMode] = useState<"chat" | "image">("chat");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleVoiceResult = useCallback((text: string) => {
