@@ -51,7 +51,7 @@ const Index = () => {
               What can I help you with?
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-md font-mono">
-              Multilingual Q&A · Image synthesis · Video generation
+              Multilingual Q&A · Image synthesis
             </p>
             <div className="flex items-center gap-4 mt-6">
               <span className="text-[11px] font-mono text-muted-foreground/50 tracking-wider">
@@ -69,7 +69,7 @@ const Index = () => {
               <ResultModule
                 key={msg.id}
                 type={msg.type}
-                label={msg.mode === "image" ? "IMAGE SYNTHESIS" : msg.mode === "video" ? "VIDEO GENERATION" : "RESPONSE"}
+                label={msg.mode === "image" ? "IMAGE SYNTHESIS" : "RESPONSE"}
                 meta={msg.meta}
                 content={msg.content}
                 imageUrl={msg.imageUrl}

@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { CornerDownLeft, Image as ImageIcon, MessageSquare, Video, Mic, MicOff } from "lucide-react";
+import { CornerDownLeft, Image as ImageIcon, MessageSquare, Mic, MicOff } from "lucide-react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 
 interface InputBarProps {
-  onSubmit: (message: string, mode: "chat" | "image" | "video") => void;
+  onSubmit: (message: string, mode: "chat" | "image") => void;
   isLoading: boolean;
   isOffline: boolean;
 }
 
 const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"chat" | "image" | "video">("chat");
+  const [mode, setMode] = useState<"chat" | "image">("chat");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleVoiceResult = useCallback((text: string) => {
@@ -71,17 +71,6 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
             <ImageIcon size={12} />
             IMAGE
           </button>
-          <button
-            onClick={() => setMode("video")}
-            className={`flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide transition-colors ${
-              mode === "video"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            <Video size={12} />
-            VIDEO
-          </button>
         </div>
 
         {/* Input area */}
@@ -98,7 +87,7 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
                 ? "Ask anything in any language..."
                 : mode === "image"
                 ? "Describe the image you want to generate..."
-                : "Describe the video you want to generate..."
+                : "Describe the image you want..."
             }
             rows={1}
             disabled={isLoading || isOffline}

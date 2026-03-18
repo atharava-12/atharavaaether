@@ -6,7 +6,7 @@ export interface AetherMessage {
   role: "user" | "assistant";
   content: string;
   type: "text" | "image";
-  mode: "chat" | "image" | "video";
+  mode: "chat" | "image";
   imageUrl?: string;
   isStreaming?: boolean;
   meta?: string;
@@ -19,7 +19,7 @@ export function useAether() {
   const [latency, setLatency] = useState<number | undefined>();
   const abortRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (input: string, mode: "chat" | "image" | "video") => {
+  const sendMessage = useCallback(async (input: string, mode: "chat" | "image") => {
     const userMsg: AetherMessage = {
       id: crypto.randomUUID(),
       role: "user",
@@ -32,27 +32,6 @@ export function useAether() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
     const startTime = Date.now();
-
-    if (mode === "video") {
-      // Video generation placeholder
-      const assistantId = crypto.randomUUID();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: assistantId,
-          role: "assistant",
-          content: "Video generation is coming soon! This feature is currently under development. Stay tuned for updates.",
-          type: "text",
-          mode: "video",
-          isStreaming: false,
-          meta: "VIDEO GENERATION · COMING SOON",
-          timestamp: Date.now(),
-        },
-      ]);
-      setLatency(0);
-      setIsLoading(false);
-      return;
-    }
 
     if (mode === "image") {
       // Image generation
