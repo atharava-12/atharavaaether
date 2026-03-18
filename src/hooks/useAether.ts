@@ -33,27 +33,6 @@ export function useAether() {
     setIsLoading(true);
     const startTime = Date.now();
 
-    if (mode === "video") {
-      // Video generation placeholder
-      const assistantId = crypto.randomUUID();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: assistantId,
-          role: "assistant",
-          content: "Video generation is coming soon! This feature is currently under development. Stay tuned for updates.",
-          type: "text",
-          mode: "video",
-          isStreaming: false,
-          meta: "VIDEO GENERATION · COMING SOON",
-          timestamp: Date.now(),
-        },
-      ]);
-      setLatency(0);
-      setIsLoading(false);
-      return;
-    }
-
     if (mode === "image") {
       // Image generation
       const assistantId = crypto.randomUUID();

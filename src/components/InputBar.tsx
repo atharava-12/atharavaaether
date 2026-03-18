@@ -87,7 +87,7 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
                 ? "Ask anything in any language..."
                 : mode === "image"
                 ? "Describe the image you want to generate..."
-                : "Describe the video you want to generate..."
+                : "Describe the image you want..."
             }
             rows={1}
             disabled={isLoading || isOffline}
