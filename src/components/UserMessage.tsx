@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 interface UserMessageProps {
   content: string;
-  mode: "chat" | "image" | "video";
+  mode: "chat" | "image";
 }
 
 const UserMessage = ({ content, mode }: UserMessageProps) => {
