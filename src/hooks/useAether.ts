@@ -232,6 +232,8 @@ export function useAether() {
     }
 
     setIsLoading(false);
+  }, [messages]);
+
   const clearMessages = useCallback(() => {
     setMessages([]);
     setLatency(undefined);
