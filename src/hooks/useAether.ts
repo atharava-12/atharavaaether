@@ -232,7 +232,10 @@ export function useAether() {
     }
 
     setIsLoading(false);
-  }, [messages]);
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    setLatency(undefined);
+  }, []);
 
-  return { messages, isLoading, latency, sendMessage };
+  return { messages, isLoading, latency, sendMessage, clearMessages };
 }
