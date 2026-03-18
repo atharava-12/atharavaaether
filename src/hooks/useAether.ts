@@ -6,7 +6,7 @@ export interface AetherMessage {
   role: "user" | "assistant";
   content: string;
   type: "text" | "image";
-  mode: "chat" | "image" | "video";
+  mode: "chat" | "image";
   imageUrl?: string;
   isStreaming?: boolean;
   meta?: string;
