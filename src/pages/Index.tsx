@@ -69,7 +69,7 @@ const Index = () => {
               <ResultModule
                 key={msg.id}
                 type={msg.type}
-                label={msg.mode === "image" ? "IMAGE SYNTHESIS" : msg.mode === "video" ? "VIDEO GENERATION" : "RESPONSE"}
+                label={msg.mode === "image" ? "IMAGE SYNTHESIS" : "RESPONSE"}
                 meta={msg.meta}
                 content={msg.content}
                 imageUrl={msg.imageUrl}
