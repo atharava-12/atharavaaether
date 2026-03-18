@@ -3,7 +3,7 @@ import { CornerDownLeft, Image as ImageIcon, MessageSquare, Mic, MicOff } from "
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 
 interface InputBarProps {
-  onSubmit: (message: string, mode: "chat" | "image" | "video") => void;
+  onSubmit: (message: string, mode: "chat" | "image") => void;
   isLoading: boolean;
   isOffline: boolean;
 }
