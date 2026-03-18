@@ -6,6 +6,53 @@
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 191 91% 37%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 80%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 191 91% 37%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 87%;
+    --input: 220 13% 91%;
+    --ring: 191 91% 37%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 220 9% 46%;
+    --sidebar-primary: 191 91% 37%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 87%;
+    --sidebar-ring: 191 91% 37%;
+
+    --module-bg: 0 0% 97%;
+    --module-border: 220 13% 87%;
+    --input-bar-bg: 0 0% 98%;
+    --glow-primary: 191 91% 37%;
+    --surface-hover: 220 14% 94%;
+  }
+
+  .dark {
     --background: 222 47% 4%;
     --foreground: 210 40% 98%;
 
@@ -45,7 +92,6 @@
     --sidebar-border: 217 19% 16%;
     --sidebar-ring: 191 91% 50%;
 
-    /* Custom tokens */
     --module-bg: 222 30% 7%;
     --module-border: 217 19% 14%;
     --input-bar-bg: 222 30% 8%;
