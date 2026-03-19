@@ -6,12 +6,23 @@ interface InputBarProps {
   onSubmit: (message: string, mode: "chat" | "image") => void;
   isLoading: boolean;
   isOffline: boolean;
+  externalValue?: string;
+  onExternalValueConsumed?: () => void;
 }
 
-const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
+const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalValueConsumed }: InputBarProps) => {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<"chat" | "image">("chat");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Handle external value (e.g. from suggested prompts)
+  useEffect(() => {
+    if (externalValue) {
+      setInput(externalValue);
+      onExternalValueConsumed?.();
+      textareaRef.current?.focus();
+    }
+  }, [externalValue, onExternalValueConsumed]);
 
   const handleVoiceResult = useCallback((text: string) => {
     setInput((prev) => (prev ? prev + " " + text : text));
@@ -47,14 +58,11 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
         </div>
       )}
       <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden">
-        {/* Mode toggle */}
         <div className="flex items-center gap-1 px-4 pt-3">
           <button
             onClick={() => setMode("chat")}
             className={`flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide transition-colors ${
-              mode === "chat"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              mode === "chat" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
             <MessageSquare size={12} />
@@ -63,9 +71,7 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
           <button
             onClick={() => setMode("image")}
             className={`flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide transition-colors ${
-              mode === "image"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              mode === "image" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
             <ImageIcon size={12} />
@@ -73,22 +79,13 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
           </button>
         </div>
 
-        {/* Input area */}
         <div className="flex items-end gap-2 px-4 pb-3 pt-2">
           <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              isOffline
-                ? "You're offline..."
-                : mode === "chat"
-                ? "Ask anything in any language..."
-                : mode === "image"
-                ? "Describe the image you want to generate..."
-                : "Describe the image you want..."
-            }
+            placeholder={isOffline ? "You're offline..." : mode === "chat" ? "Ask anything in any language..." : "Describe the image you want to generate..."}
             rows={1}
             disabled={isLoading || isOffline}
             className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm resize-none outline-none min-h-[36px] max-h-[120px] py-2 font-sans"
@@ -98,9 +95,7 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
               onClick={isListening ? stopListening : startListening}
               disabled={isLoading}
               className={`flex items-center justify-center h-8 w-8 rounded transition-colors shrink-0 mb-1 ${
-                isListening
-                  ? "bg-destructive/20 text-destructive animate-pulse"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
+                isListening ? "bg-destructive/20 text-destructive animate-pulse" : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
               title={isListening ? "Stop recording" : "Voice input"}
             >
@@ -116,7 +111,6 @@ const InputBar = ({ onSubmit, isLoading, isOffline }: InputBarProps) => {
           </button>
         </div>
 
-        {/* AI Disclaimer */}
         <div className="px-4 pb-2">
           <p className="text-[10px] text-muted-foreground/50 text-center font-mono">
             AI responses may be inaccurate. Verify important information.
