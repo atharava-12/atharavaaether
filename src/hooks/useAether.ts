@@ -218,5 +218,5 @@ export function useAether() {
     setLatency(undefined);
   }, []);
 
-  return { messages, isLoading, latency, sendMessage, clearMessages };
+  return { messages, setMessages, isLoading, latency, sendMessage, clearMessages };
 }
