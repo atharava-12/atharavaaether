@@ -19,8 +19,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const needsOnboarding = useOnboardingCheck(user?.id);
 
-  if (loading || needsOnboarding === null) return <div className="min-h-screen bg-background" />;
+  if (loading) return <div className="min-h-screen bg-background" />;
   if (!user) return <Navigate to="/auth" replace />;
+  if (needsOnboarding === null) return <div className="min-h-screen bg-background" />;
   if (needsOnboarding) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
