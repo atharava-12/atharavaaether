@@ -88,17 +88,41 @@ const Index = () => {
     setInputValue(prompt);
   }, []);
 
-  const playTTS = useCallback((text: string) => {
-    if (!("speechSynthesis" in window)) {
-      console.error("Speech synthesis not supported");
+  const [ttsPlaying, setTtsPlaying] = useState(false);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playTTS = useCallback(async (text: string) => {
+    if (ttsPlaying) {
+      ttsAudioRef.current?.pause();
+      setTtsPlaying(false);
       return;
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-  }, []);
+    setTtsPlaying(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text, voiceId: "EXAVITQu4vr4xnSDxMaL" }),
+        }
+      );
+      if (!response.ok) throw new Error(`TTS failed: ${response.status}`);
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      ttsAudioRef.current = audio;
+      audio.onended = () => setTtsPlaying(false);
+      await audio.play();
+    } catch (e) {
+      console.error("TTS error:", e);
+      setTtsPlaying(false);
+    }
+  }, [ttsPlaying]);
 
   return (
     <div className="min-h-screen bg-background relative flex">
