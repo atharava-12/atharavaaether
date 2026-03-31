@@ -1,13 +1,26 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.bf35d7fffd8149b8893aad58d4224acf',
-  appName: 'atharavaaether',
+  appId: 'com.chitchat.ai',
+  appName: 'ChitChat AI Chatbot',
   webDir: 'dist',
-  server: {
-    url: 'https://bf35d7ff-fd81-49b8-893a-ad58d4224acf.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  }
+  android: {
+    buildOptions: {
+      releaseType: 'AAB'
+    }
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#09090B',
+      showSpinner: false,
+      androidScaleType: 'CENTER_CROP',
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#09090B',
+    },
+  },
 };
 
 export default config;
