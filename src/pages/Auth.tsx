@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Zap, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Zap, Mail, Lock, Eye, EyeOff, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useGuestMode } from "@/hooks/useGuestMode";
 import { toast } from "sonner";
 
 const Auth = () => {
   const { user, loading, signIn, signUp, signInWithGoogle } = useAuth();
+  const { isGuest, enterGuestMode } = useGuestMode();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,19 +22,24 @@ const Auth = () => {
     );
   }
 
-  if (user) return <Navigate to="/" replace />;
+  if (user || isGuest) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
     setSubmitting(true);
-    const { error } = isLogin
-      ? await signIn(email, password)
-      : await signUp(email, password);
+    const { error } = isLogin ? await signIn(email, password) : await signUp(email, password);
     setSubmitting(false);
 
     if (error) {
-      toast.error(error.message);
+      const msg = error.message.toLowerCase();
+      if (isLogin && (msg.includes("invalid") || msg.includes("credentials") || msg.includes("not found"))) {
+        toast.error("No account found. Please create an account.");
+      } else if (!isLogin && msg.includes("registered")) {
+        toast.error("Account already exists. Please sign in.");
+      } else {
+        toast.error(error.message);
+      }
     } else if (!isLogin) {
       toast.success("Check your email to verify your account!");
     }
@@ -45,11 +52,15 @@ const Auth = () => {
     if (error) toast.error(error instanceof Error ? error.message : "Google sign-in failed");
   };
 
+  const handleGuest = () => {
+    enterGuestMode();
+    toast.success("Signed in as guest. Chat-only mode.");
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
       <div className="noise-overlay" />
-      <div className="w-full max-w-sm space-y-8 relative z-10">
-        {/* Logo */}
+      <div className="w-full max-w-sm space-y-7 relative z-10">
         <div className="flex flex-col items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center">
             <Zap size={24} className="text-primary" />
@@ -58,7 +69,6 @@ const Auth = () => {
           <p className="text-sm text-muted-foreground font-mono">Smart conversations, anytime</p>
         </div>
 
-        {/* Google */}
         <button
           onClick={handleGoogle}
           disabled={submitting}
@@ -74,53 +84,42 @@ const Auth = () => {
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        {/* Email form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative">
             <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
+              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email" required
               className="w-full h-11 rounded-xl border border-border bg-card pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <div className="relative">
             <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              minLength={6}
+              type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password" required minLength={6}
               className="w-full h-11 rounded-xl border border-border bg-card pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-          >
+          <button type="submit" disabled={submitting} className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
             {submitting ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </button>
         </form>
 
+        <button
+          onClick={handleGuest}
+          className="w-full h-11 rounded-xl border border-dashed border-border bg-transparent hover:bg-card text-muted-foreground hover:text-foreground text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+        >
+          <UserCircle2 size={14} />
+          Continue as Guest (Chat only)
+        </button>
+
         <p className="text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:underline font-medium"
-          >
+          <button onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline font-medium">
             {isLogin ? "Sign Up" : "Sign In"}
           </button>
         </p>
