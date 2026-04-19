@@ -1,54 +1,41 @@
 
 
-# Build ChitChat as a Native Mobile App
+User wants real MP4 video output, not animated frame sequences. Currently `aether-video` returns image frames played at 4fps client-side.
 
-Capacitor is already set up in your project. No code changes are needed — the remaining steps happen on your local machine.
+**Approach**: Use ffmpeg.wasm in the browser to encode the generated frames into a downloadable MP4. Lovable AI Gateway has no native video model, so frame-generation remains the source — but we'll composite into a real video file.
 
-## Steps to Build the Native App
+## Plan
 
-### 1. Export & Clone
-- Click **"Export to GitHub"** in Lovable (top-right menu)
-- Clone the repo locally: `git clone <your-repo-url>`
+### 1. Add ffmpeg.wasm
+Install `@ffmpeg/ffmpeg` and `@ffmpeg/util` for in-browser MP4 encoding (no backend needed, no API key).
 
-### 2. Install Dependencies
-```bash
-cd your-project
-npm install
-```
+### 2. Increase frame quality
+Update `aether-video` edge function: bump default `frameCount` from 6 to 12, and add motion-interpolation prompts so frames flow smoothly (e.g. "subtle camera pan", "frame N of N showing progressive motion").
 
-### 3. Add Native Platforms
-```bash
-npx cap add android    # For Android
-npx cap add ios        # For iOS (Mac only, requires Xcode)
-```
+### 3. Build video encoder hook
+New `src/hooks/useVideoEncoder.ts`:
+- Loads ffmpeg.wasm (lazy, with progress)
+- Takes frame URLs, fetches each as blob
+- Writes frames to ffmpeg FS as `frame_001.png`...
+- Runs: `ffmpeg -framerate 8 -i frame_%03d.png -vf "scale=512:512,minterpolate=fps=24" -c:v libx264 -pix_fmt yuv420p -movflags +faststart output.mp4`
+- `minterpolate` filter generates intermediate frames → smooth 24fps from 8fps source
+- Returns MP4 Blob URL
 
-### 4. Build & Sync
-```bash
-npm run build
-npx cap sync
-```
+### 4. Rewrite VideoGen page
+- Replace `FrameAnimator` with HTML5 `<video>` element with native controls
+- After frames return from edge function, encode → display real `.mp4`
+- Add download button (saves real .mp4 file)
+- Show two-stage progress: "Generating frames..." then "Encoding video..."
 
-### 5. Run on Device/Emulator
-```bash
-npx cap run android    # Opens in Android Studio
-npx cap run ios        # Opens in Xcode (Mac only)
-```
+### 5. Vite config
+Add COOP/COEP headers in `vite.config.ts` for SharedArrayBuffer (required by ffmpeg.wasm multi-threaded build), or use single-threaded ffmpeg.wasm core to avoid that requirement. Will use single-threaded core for compatibility with Capacitor/mobile.
 
-### 6. Generate Release Build (Android)
-In Android Studio:
-- **Build → Generate Signed Bundle / APK**
-- Choose **Android App Bundle (.aab)** (required for Play Store)
-- Sign with your keystore
+## Files
+- **Modify**: `supabase/functions/aether-video/index.ts`, `src/pages/VideoGen.tsx`, `package.json`
+- **Create**: `src/hooks/useVideoEncoder.ts`
 
-## Requirements
-- **Android**: Android Studio installed
-- **iOS**: Mac with Xcode installed
-- **Play Store**: Google Play Developer account ($25 one-time fee)
-- **App Store**: Apple Developer account ($99/year)
-
-## Hot Reload During Development
-The current `capacitor.config.ts` points to your Lovable preview URL, so the app will load your live preview. For production release, remove the `server` block so it uses the local `dist` folder instead.
-
-## Reference
-For a detailed walkthrough, see the [Lovable mobile development guide](https://docs.lovable.dev).
+## Tradeoffs
+- ffmpeg.wasm core ~25MB, lazy-loaded only when user generates a video
+- Encoding takes 5-15s on mobile after frame generation
+- Result is a real, shareable, downloadable .mp4 — works in any video player
 
