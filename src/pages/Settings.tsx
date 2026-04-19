@@ -3,16 +3,20 @@ import { ArrowLeft, Moon, Sun, LogOut, Trash2, Shield, FileText, Globe } from "l
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { useGuestMode } from "@/hooks/useGuestMode";
+import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 
 const Settings = () => {
   const { user, signOut, deleteAccount } = useAuth();
+  const { isGuest, exitGuestMode } = useGuestMode();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
 
   const handleLogout = async () => {
-    await signOut();
+    if (isGuest) exitGuestMode();
+    else await signOut();
     navigate("/auth");
   };
 
@@ -42,11 +46,11 @@ const Settings = () => {
         </Link>
       </header>
 
-      <div className="pt-16 pb-12 px-4 max-w-md mx-auto space-y-2">
+      <div className="pt-16 pb-32 px-4 max-w-md mx-auto space-y-2">
         {/* User info */}
         <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-sm font-medium text-foreground truncate">{user?.email}</p>
-          <p className="text-xs text-muted-foreground font-mono mt-1">Signed in</p>
+          <p className="text-sm font-medium text-foreground truncate">{isGuest ? "Guest user" : user?.email}</p>
+          <p className="text-xs text-muted-foreground font-mono mt-1">{isGuest ? "Local-only mode" : "Signed in"}</p>
         </div>
 
         {/* Appearance */}
@@ -89,15 +93,19 @@ const Settings = () => {
           Log Out
         </button>
 
-        <button
-          onClick={handleDeleteAccount}
-          disabled={deleting}
-          className="w-full flex items-center gap-3 rounded-xl border border-destructive/30 bg-card p-4 hover:bg-destructive/10 transition-colors text-sm text-destructive disabled:opacity-50"
-        >
-          <Trash2 size={16} />
-          {deleting ? "Deleting..." : "Delete Account"}
-        </button>
+        {!isGuest && (
+          <button
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+            className="w-full flex items-center gap-3 rounded-xl border border-destructive/30 bg-card p-4 hover:bg-destructive/10 transition-colors text-sm text-destructive disabled:opacity-50"
+          >
+            <Trash2 size={16} />
+            {deleting ? "Deleting..." : "Delete Account"}
+          </button>
+        )}
       </div>
+
+      <BottomNav />
     </div>
   );
 };

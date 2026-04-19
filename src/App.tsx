@@ -5,21 +5,27 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingCheck } from "@/hooks/useOnboardingCheck";
+import { useGuestMode } from "@/hooks/useGuestMode";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
+import ImageGen from "./pages/ImageGen";
+import VideoGen from "./pages/VideoGen";
+import Memory from "./pages/Memory";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, allowGuest = false }: { children: React.ReactNode; allowGuest?: boolean }) {
   const { user, loading } = useAuth();
+  const { isGuest } = useGuestMode();
   const needsOnboarding = useOnboardingCheck(user?.id);
 
   if (loading) return <div className="min-h-screen bg-background" />;
+  if (isGuest && allowGuest) return <>{children}</>;
   if (!user) return <Navigate to="/auth" replace />;
   if (needsOnboarding === null) return <div className="min-h-screen bg-background" />;
   if (needsOnboarding) return <Navigate to="/onboarding" replace />;
@@ -37,8 +43,11 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<Auth />} />
     <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
-    <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+    <Route path="/" element={<ProtectedRoute allowGuest><Index /></ProtectedRoute>} />
+    <Route path="/image" element={<ProtectedRoute allowGuest><ImageGen /></ProtectedRoute>} />
+    <Route path="/video" element={<ProtectedRoute allowGuest><VideoGen /></ProtectedRoute>} />
+    <Route path="/memory" element={<ProtectedRoute allowGuest><Memory /></ProtectedRoute>} />
+    <Route path="/settings" element={<ProtectedRoute allowGuest><Settings /></ProtectedRoute>} />
     <Route path="/privacy" element={<PrivacyPolicy />} />
     <Route path="/terms" element={<Terms />} />
     <Route path="*" element={<NotFound />} />
