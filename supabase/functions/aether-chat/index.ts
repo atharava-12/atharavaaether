@@ -10,23 +10,21 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
-    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://chitchat.lovable.app",
-        "X-Title": "ChitChat",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp:free",
+        model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
-            content: "You are ChitChat, a multilingual AI assistant. You answer questions in any language the user writes in. Be precise, clear, and helpful. Use markdown formatting for structured responses. If the user writes in a specific language, respond in that same language.",
+            content: "You are ChitChat, a smart, friendly, and helpful assistant. You speak casually but clearly and help with studies, coding, and daily questions. Use markdown formatting (code blocks, bold, lists) when helpful. Reply in whatever language the user writes in.",
           },
           ...messages,
         ],
@@ -42,13 +40,13 @@ serve(async (req) => {
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "OpenRouter credit exhausted. Top up at openrouter.ai/credits" }), {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Add funds in Settings → Workspace → Usage." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
-      console.error("OpenRouter error:", response.status, t);
+      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI provider error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
