@@ -12,14 +12,13 @@ serve(async (req) => {
     const { prompt, frameCount = 12 } = await req.json();
     if (!prompt) throw new Error("Missing prompt");
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
 
     const totalFrames = Math.min(Math.max(frameCount, 6), 16);
 
-    // Motion-aware prompts for smooth interpolation between frames
     const framePrompts = Array.from({ length: totalFrames }, (_, i) => {
-      const progress = i / (totalFrames - 1); // 0..1
+      const progress = i / (totalFrames - 1);
       const motionHint =
         progress < 0.33
           ? "establishing shot, camera beginning subtle pan"
@@ -31,22 +30,30 @@ serve(async (req) => {
 
     const results = await Promise.all(
       framePrompts.map(async (fp) => {
-        const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
-          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://chitchat.lovable.app",
+            "X-Title": "ChitChat",
+          },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
+            model: "google/gemini-2.5-flash-image-preview",
             messages: [{ role: "user", content: fp }],
             modalities: ["image", "text"],
           }),
         });
         if (!r.ok) {
           if (r.status === 429) throw new Error("Rate limit exceeded");
-          if (r.status === 402) throw new Error("Usage limit reached");
-          throw new Error(`Gateway error ${r.status}`);
+          if (r.status === 402) throw new Error("OpenRouter credit exhausted");
+          throw new Error(`Provider error ${r.status}`);
         }
         const data = await r.json();
-        return data.choices?.[0]?.message?.images?.[0]?.image_url?.url as string | undefined;
+        return (
+          data.choices?.[0]?.message?.images?.[0]?.image_url?.url ||
+          data.choices?.[0]?.message?.images?.[0]?.image_url
+        ) as string | undefined;
       })
     );
 
