@@ -57,7 +57,11 @@ export function useVideoEncoder() {
         ]);
 
         const data = await ffmpeg.readFile("output.mp4");
-        const blob = new Blob([data as Uint8Array], { type: "video/mp4" });
+        const bytes = data as Uint8Array;
+        // Copy into a fresh ArrayBuffer to satisfy BlobPart typing across TS lib versions
+        const buf = new Uint8Array(bytes.byteLength);
+        buf.set(bytes);
+        const blob = new Blob([buf.buffer], { type: "video/mp4" });
 
         // Cleanup frames
         for (let i = 0; i < frameUrls.length; i++) {
