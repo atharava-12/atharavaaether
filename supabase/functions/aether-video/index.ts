@@ -9,18 +9,25 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { prompt, frameCount = 6 } = await req.json();
+    const { prompt, frameCount = 12 } = await req.json();
     if (!prompt) throw new Error("Missing prompt");
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-    const totalFrames = Math.min(Math.max(frameCount, 3), 8);
+    const totalFrames = Math.min(Math.max(frameCount, 6), 16);
 
-    // Generate frames in parallel as a sequence
-    const framePrompts = Array.from({ length: totalFrames }, (_, i) =>
-      `Cinematic video frame ${i + 1} of ${totalFrames} from this scene: ${prompt}. Maintain visual continuity with subtle motion progression. Frame ${i + 1}/${totalFrames}.`
-    );
+    // Motion-aware prompts for smooth interpolation between frames
+    const framePrompts = Array.from({ length: totalFrames }, (_, i) => {
+      const progress = i / (totalFrames - 1); // 0..1
+      const motionHint =
+        progress < 0.33
+          ? "establishing shot, camera beginning subtle pan"
+          : progress < 0.66
+          ? "mid-motion, continuous camera movement, slight zoom"
+          : "closing shot, camera completing motion arc";
+      return `Cinematic video keyframe ${i + 1} of ${totalFrames}. Scene: ${prompt}. ${motionHint}. Maintain identical subjects, lighting, color palette, and composition continuity with adjacent frames. Progressive motion at ${Math.round(progress * 100)}% through the shot. Photorealistic, no text, no watermark.`;
+    });
 
     const results = await Promise.all(
       framePrompts.map(async (fp) => {
@@ -44,7 +51,7 @@ serve(async (req) => {
     );
 
     const frames = results.filter((u): u is string => !!u);
-    if (frames.length < 2) throw new Error("Failed to generate enough frames");
+    if (frames.length < 3) throw new Error("Failed to generate enough frames");
 
     return new Response(JSON.stringify({ frames }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
