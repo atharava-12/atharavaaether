@@ -32,8 +32,22 @@ const ImageGen = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("aether-image", { body: { prompt } });
-      if (error) throw error;
-      if (!data?.imageUrl) throw new Error(data?.error || "No image returned");
+      // Edge function returned non-2xx — surface the real reason
+      const errMsg =
+        (error && (error as { message?: string }).message) ||
+        (data && (data as { error?: string }).error);
+      if (errMsg) {
+        if (/usage limit|402/i.test(errMsg)) {
+          toast.error("AI usage limit reached. Add funds in Settings → Workspace → Usage to keep generating.");
+          return;
+        }
+        if (/rate limit|429/i.test(errMsg)) {
+          toast.error("Rate limited. Please wait a moment and try again.");
+          return;
+        }
+        throw new Error(errMsg);
+      }
+      if (!data?.imageUrl) throw new Error("No image returned");
       setImages((prev) => [{ id: crypto.randomUUID(), prompt, url: data.imageUrl }, ...prev]);
       setPrompt("");
     } catch (e) {
