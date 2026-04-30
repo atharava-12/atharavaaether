@@ -1,11 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { MessageSquare, Image as ImageIcon, Video, Brain } from "lucide-react";
+import { MessageSquare, Image as ImageIcon, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", label: "Chat", icon: MessageSquare },
   { to: "/image", label: "Image", icon: ImageIcon },
-  { to: "/video", label: "Video", icon: Video },
   { to: "/memory", label: "Memory", icon: Brain },
 ];
 
