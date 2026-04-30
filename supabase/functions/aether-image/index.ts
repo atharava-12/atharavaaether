@@ -96,6 +96,7 @@ serve(async (req) => {
 
       // Step 3: Reference the uploaded asset in the payload
       payload.image = [`data:${mimeType};asset_id,${assetId}`];
+      uploadedAssetId = assetId;
     }
 
     const response = await fetch(
