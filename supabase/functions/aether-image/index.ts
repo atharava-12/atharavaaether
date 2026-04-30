@@ -10,39 +10,55 @@ serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
-    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
-    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
+    if (!prompt || typeof prompt !== "string") {
+      return new Response(JSON.stringify({ error: "Prompt is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://chitchat.lovable.app",
-        "X-Title": "ChitChat",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
-      }),
-    });
+    const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
+    if (!NVIDIA_API_KEY) {
+      return new Response(JSON.stringify({ error: "NVIDIA_API_KEY is not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const response = await fetch(
+      "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${NVIDIA_API_KEY}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          width: 1024,
+          height: 1024,
+          seed: 0,
+          steps: 4,
+        }),
+      }
+    );
 
     if (!response.ok) {
+      const errText = await response.text();
+      console.error("NVIDIA image error:", response.status, errText);
+      if (response.status === 401) {
+        return new Response(JSON.stringify({ error: "Invalid NVIDIA API key." }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again shortly." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "OpenRouter credit exhausted. Top up at openrouter.ai/credits" }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("Image generation error:", response.status, t);
       return new Response(JSON.stringify({ error: "Image generation failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -50,19 +66,32 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const imageUrl =
-      data.choices?.[0]?.message?.images?.[0]?.image_url?.url ||
-      data.choices?.[0]?.message?.images?.[0]?.image_url;
-    const text = data.choices?.[0]?.message?.content || "";
+
+    // NVIDIA FLUX returns base64 image data — try common response shapes
+    const b64 =
+      data?.image ||
+      data?.images?.[0] ||
+      data?.artifacts?.[0]?.base64 ||
+      data?.data?.[0]?.b64_json;
+
+    const directUrl = data?.url || data?.images?.[0]?.url;
+
+    let imageUrl: string | null = null;
+    if (typeof b64 === "string" && b64.length > 0) {
+      imageUrl = b64.startsWith("data:") ? b64 : `data:image/png;base64,${b64}`;
+    } else if (typeof directUrl === "string") {
+      imageUrl = directUrl;
+    }
 
     if (!imageUrl) {
-      return new Response(JSON.stringify({ error: "No image was generated", text }), {
+      console.error("Unexpected NVIDIA response shape:", JSON.stringify(data).slice(0, 500));
+      return new Response(JSON.stringify({ error: "No image returned by model" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ imageUrl, text }), {
+    return new Response(JSON.stringify({ imageUrl }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
