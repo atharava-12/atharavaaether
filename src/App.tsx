@@ -11,7 +11,7 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Settings from "./pages/Settings";
 import ImageGen from "./pages/ImageGen";
-import VideoGen from "./pages/VideoGen";
+
 import Memory from "./pages/Memory";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
@@ -45,7 +45,7 @@ const AppRoutes = () => (
     <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
     <Route path="/" element={<ProtectedRoute allowGuest><Index /></ProtectedRoute>} />
     <Route path="/image" element={<ProtectedRoute allowGuest><ImageGen /></ProtectedRoute>} />
-    <Route path="/video" element={<ProtectedRoute allowGuest><VideoGen /></ProtectedRoute>} />
+    
     <Route path="/memory" element={<ProtectedRoute allowGuest><Memory /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute allowGuest><Settings /></ProtectedRoute>} />
     <Route path="/privacy" element={<PrivacyPolicy />} />
