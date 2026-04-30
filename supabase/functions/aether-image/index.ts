@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, image } = await req.json();
     if (!prompt || typeof prompt !== "string") {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
         status: 400,
@@ -25,6 +25,21 @@ serve(async (req) => {
       });
     }
 
+    // Build payload - include image array for editing if provided
+    const payload: Record<string, unknown> = {
+      prompt,
+      width: 1024,
+      height: 1024,
+      seed: 0,
+      steps: 4,
+    };
+
+    if (image) {
+      // Accept either a single data URL/string or an array of them
+      const images = Array.isArray(image) ? image : [image];
+      payload.image = images;
+    }
+
     const response = await fetch(
       "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b",
       {
@@ -34,13 +49,7 @@ serve(async (req) => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          prompt,
-          width: 1024,
-          height: 1024,
-          seed: 0,
-          steps: 4,
-        }),
+        body: JSON.stringify(payload),
       }
     );
 
@@ -59,7 +68,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "Image generation failed" }), {
+      return new Response(JSON.stringify({ error: `Image generation failed: ${errText.slice(0, 200)}` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -67,7 +76,6 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    // NVIDIA FLUX returns base64 image data — try common response shapes
     const b64 =
       data?.image ||
       data?.images?.[0] ||
