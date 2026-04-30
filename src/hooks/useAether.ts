@@ -102,7 +102,7 @@ export function useAether() {
         type: "text",
         mode: "chat",
         isStreaming: true,
-        meta: "MODEL: gemini-3-flash-preview",
+        meta: "MODEL: mistral-medium-3.5-128b",
         timestamp: Date.now(),
       },
     ]);
