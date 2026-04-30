@@ -21,47 +21,58 @@ serve(async (req) => {
       });
     }
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      return new Response(JSON.stringify({ error: "OPENAI_API_KEY is not configured" }), {
+    const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
+    if (!NVIDIA_API_KEY) {
+      return new Response(JSON.stringify({ error: "NVIDIA_API_KEY is not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${NVIDIA_API_KEY}`,
         "Content-Type": "application/json",
+        Accept: "text/event-stream",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "mistralai/mistral-medium-3.5-128b",
+        reasoning_effort: "high",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
         ],
+        max_tokens: 16384,
+        temperature: 0.7,
+        top_p: 1.0,
         stream: true,
       }),
     });
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       const errText = await response.text();
-      console.error("OpenAI error:", response.status, errText);
+      console.error("NVIDIA error:", response.status, errText);
 
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "OpenAI rate limit or quota exceeded. Check your OpenAI billing." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       if (response.status === 401) {
-        return new Response(JSON.stringify({ error: "Invalid OpenAI API key." }), {
+        return new Response(JSON.stringify({ error: "Invalid NVIDIA API key." }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "OpenAI request failed" }), {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "NVIDIA rate limit exceeded. Please try again shortly." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "NVIDIA credits exhausted." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "NVIDIA request failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
