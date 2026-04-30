@@ -33,20 +33,15 @@ serve(async (req) => {
       steps: 4,
     };
 
-    const inferenceHeaders: Record<string, string> = {
-      Authorization: `Bearer ${NVIDIA_API_KEY}`,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    };
-    if (uploadedAssetId) {
-      inferenceHeaders["NVCF-INPUT-ASSET-REFERENCES"] = uploadedAssetId;
-    }
-
     const response = await fetch(
       "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b",
       {
         method: "POST",
-        headers: inferenceHeaders,
+        headers: {
+          Authorization: `Bearer ${NVIDIA_API_KEY}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       }
     );
