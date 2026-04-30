@@ -33,6 +33,7 @@ serve(async (req) => {
       seed: 0,
       steps: 4,
     };
+    let uploadedAssetId: string | null = null;
 
     if (image) {
       // NVIDIA requires image upload to their assets API first, then reference by asset_id
