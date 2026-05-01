@@ -102,7 +102,7 @@ export function useAether() {
         type: "text",
         mode: "chat",
         isStreaming: true,
-        meta: "MODEL: mistral-medium-3.5-128b",
+        meta: "MODEL: minimax-m2.7",
         timestamp: Date.now(),
       },
     ]);
