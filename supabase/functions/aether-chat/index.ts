@@ -37,15 +37,14 @@ serve(async (req) => {
         Accept: "text/event-stream",
       },
       body: JSON.stringify({
-        model: "mistralai/mistral-medium-3.5-128b",
-        reasoning_effort: "high",
+        model: "minimaxai/minimax-m2.7",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
         ],
-        max_tokens: 16384,
-        temperature: 0.7,
-        top_p: 1.0,
+        max_tokens: 8192,
+        temperature: 1,
+        top_p: 0.95,
         stream: true,
       }),
     });
