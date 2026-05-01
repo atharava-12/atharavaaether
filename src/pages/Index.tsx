@@ -6,11 +6,15 @@ import ResultModule from "@/components/ResultModule";
 import UserMessage from "@/components/UserMessage";
 import SuggestedPrompts from "@/components/SuggestedPrompts";
 import BottomNav from "@/components/BottomNav";
+import ModelSelector from "@/components/ModelSelector";
 import { useAether } from "@/hooks/useAether";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import { DEFAULT_MODEL_ID, getModel, type ModelId } from "@/lib/models";
+
+const MODEL_STORAGE_KEY = "chitchat:selectedModel";
 
 const Index = () => {
   const { user } = useAuth();
@@ -20,6 +24,15 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isOnline = useOnlineStatus();
   const [inputValue, setInputValue] = useState("");
+  const [modelId, setModelId] = useState<ModelId>(() => {
+    if (typeof window === "undefined") return DEFAULT_MODEL_ID;
+    const saved = window.localStorage.getItem(MODEL_STORAGE_KEY) as ModelId | null;
+    return saved ?? DEFAULT_MODEL_ID;
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(MODEL_STORAGE_KEY, modelId);
+  }, [modelId]);
 
   useEffect(() => {
     if (storage.activeConversationId) {
