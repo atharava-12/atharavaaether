@@ -102,7 +102,7 @@ export function useAether() {
         type: "text",
         mode: "chat",
         isStreaming: true,
-        meta: "MODEL: minimax-m2.7",
+        meta: "MODEL: nemotron-3-super-120b",
         timestamp: Date.now(),
       },
     ]);
