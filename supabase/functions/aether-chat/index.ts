@@ -37,14 +37,16 @@ serve(async (req) => {
         Accept: "text/event-stream",
       },
       body: JSON.stringify({
-        model: "minimaxai/minimax-m2.7",
+        model: "nvidia/nemotron-3-super-120b-a12b",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
         ],
-        max_tokens: 8192,
+        max_tokens: 16384,
         temperature: 1,
         top_p: 0.95,
+        chat_template_kwargs: { enable_thinking: true },
+        reasoning_budget: 16384,
         stream: true,
       }),
     });
