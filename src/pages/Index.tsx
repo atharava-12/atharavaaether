@@ -56,8 +56,9 @@ const Index = () => {
     }
     const userMsg = { id: crypto.randomUUID(), role: "user" as const, content: input, type: "text" as const, mode, timestamp: Date.now() };
     await storage.saveMessage(convId, userMsg);
-    await sendMessage(input, mode);
-  }, [storage, sendMessage]);
+    const m = getModel(modelId);
+    await sendMessage(input, mode, m.id, m.label);
+  }, [storage, sendMessage, modelId]);
 
   useEffect(() => {
     if (!storage.activeConversationId) return;
