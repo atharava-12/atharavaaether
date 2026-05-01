@@ -7,12 +7,89 @@ const corsHeaders = {
 
 const systemPrompt = "You are ChitChat, a smart, friendly, and helpful assistant. You speak casually but clearly and help with studies, coding, and daily questions. Use markdown formatting (code blocks, bold, lists) when helpful. Reply in whatever language the user writes in.";
 
+type ModelId =
+  | "qwen-3.5"
+  | "nemotron-super"
+  | "nemotron-nano"
+  | "mistral-large"
+  | "mistral-small";
+
+function buildPayload(modelId: ModelId, messages: unknown[]) {
+  const base = {
+    messages: [{ role: "system", content: systemPrompt }, ...messages],
+    stream: true,
+  };
+
+  switch (modelId) {
+    case "qwen-3.5":
+      return {
+        ...base,
+        model: "qwen/qwen3.5-397b-a17b",
+        max_tokens: 16384,
+        temperature: 0.6,
+        top_p: 0.95,
+        top_k: 20,
+        presence_penalty: 0,
+        repetition_penalty: 1,
+        chat_template_kwargs: { enable_thinking: true },
+      };
+    case "nemotron-super":
+      return {
+        ...base,
+        model: "nvidia/nemotron-3-super-120b-a12b",
+        max_tokens: 16384,
+        temperature: 1,
+        top_p: 0.95,
+        chat_template_kwargs: { enable_thinking: true },
+        reasoning_budget: 16384,
+      };
+    case "nemotron-nano":
+      return {
+        ...base,
+        model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+        max_tokens: 65536,
+        temperature: 0.6,
+        top_p: 0.95,
+        chat_template_kwargs: { enable_thinking: true },
+        reasoning_budget: 16384,
+      };
+    case "mistral-large":
+      return {
+        ...base,
+        model: "mistralai/mistral-large-3-675b-instruct-2512",
+        max_tokens: 2048,
+        temperature: 0.15,
+        top_p: 1.0,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      };
+    case "mistral-small":
+      return {
+        ...base,
+        model: "mistralai/mistral-small-4-119b-2603",
+        max_tokens: 16384,
+        temperature: 0.1,
+        top_p: 1.0,
+        reasoning_effort: "high",
+      };
+    default:
+      return {
+        ...base,
+        model: "nvidia/nemotron-3-super-120b-a12b",
+        max_tokens: 16384,
+        temperature: 1,
+        top_p: 0.95,
+      };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const body = await req.json();
     const messages = Array.isArray(body?.messages) ? body.messages : null;
+    const modelId = (body?.modelId as ModelId) || "nemotron-super";
 
     if (!messages) {
       return new Response(JSON.stringify({ error: "Invalid request body" }), {
@@ -29,6 +106,8 @@ serve(async (req) => {
       });
     }
 
+    const payload = buildPayload(modelId, messages);
+
     const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -36,19 +115,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
         Accept: "text/event-stream",
       },
-      body: JSON.stringify({
-        model: "nvidia/nemotron-3-super-120b-a12b",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        max_tokens: 16384,
-        temperature: 1,
-        top_p: 0.95,
-        chat_template_kwargs: { enable_thinking: true },
-        reasoning_budget: 16384,
-        stream: true,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok || !response.body) {
@@ -62,18 +129,18 @@ serve(async (req) => {
         });
       }
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "NVIDIA rate limit exceeded. Please try again shortly." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "NVIDIA credits exhausted." }), {
+        return new Response(JSON.stringify({ error: "API credits exhausted." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "NVIDIA request failed" }), {
+      return new Response(JSON.stringify({ error: "Model request failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

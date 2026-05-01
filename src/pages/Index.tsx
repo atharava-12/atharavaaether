@@ -6,11 +6,15 @@ import ResultModule from "@/components/ResultModule";
 import UserMessage from "@/components/UserMessage";
 import SuggestedPrompts from "@/components/SuggestedPrompts";
 import BottomNav from "@/components/BottomNav";
+import ModelSelector from "@/components/ModelSelector";
 import { useAether } from "@/hooks/useAether";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import { DEFAULT_MODEL_ID, getModel, type ModelId } from "@/lib/models";
+
+const MODEL_STORAGE_KEY = "chitchat:selectedModel";
 
 const Index = () => {
   const { user } = useAuth();
@@ -20,6 +24,15 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isOnline = useOnlineStatus();
   const [inputValue, setInputValue] = useState("");
+  const [modelId, setModelId] = useState<ModelId>(() => {
+    if (typeof window === "undefined") return DEFAULT_MODEL_ID;
+    const saved = window.localStorage.getItem(MODEL_STORAGE_KEY) as ModelId | null;
+    return saved ?? DEFAULT_MODEL_ID;
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(MODEL_STORAGE_KEY, modelId);
+  }, [modelId]);
 
   useEffect(() => {
     if (storage.activeConversationId) {
@@ -43,8 +56,9 @@ const Index = () => {
     }
     const userMsg = { id: crypto.randomUUID(), role: "user" as const, content: input, type: "text" as const, mode, timestamp: Date.now() };
     await storage.saveMessage(convId, userMsg);
-    await sendMessage(input, mode);
-  }, [storage, sendMessage]);
+    const m = getModel(modelId);
+    await sendMessage(input, mode, m.id, m.label);
+  }, [storage, sendMessage, modelId]);
 
   useEffect(() => {
     if (!storage.activeConversationId) return;
@@ -95,7 +109,8 @@ const Index = () => {
           <h1 className="text-sm font-semibold tracking-[-0.02em]">ChitChat</h1>
           {isGuest && <span className="text-[9px] font-mono uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5 ml-1">Guest</span>}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <ModelSelector modelId={modelId} onChange={setModelId} />
           <button onClick={handleNewChat} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
             <Plus size={12} /> New
           </button>
