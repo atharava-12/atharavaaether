@@ -109,7 +109,8 @@ const Index = () => {
           <h1 className="text-sm font-semibold tracking-[-0.02em]">ChitChat</h1>
           {isGuest && <span className="text-[9px] font-mono uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5 ml-1">Guest</span>}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <ModelSelector modelId={modelId} onChange={setModelId} />
           <button onClick={handleNewChat} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
             <Plus size={12} /> New
           </button>
