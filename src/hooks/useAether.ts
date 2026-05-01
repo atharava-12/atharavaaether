@@ -25,7 +25,7 @@ export function useAether() {
   const [latency, setLatency] = useState<number | undefined>();
   const abortRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (input: string, mode: "chat" | "image") => {
+  const sendMessage = useCallback(async (input: string, mode: "chat" | "image", modelId?: string, modelLabel?: string) => {
     const userMsg: AetherMessage = {
       id: crypto.randomUUID(),
       role: "user",
@@ -102,7 +102,7 @@ export function useAether() {
         type: "text",
         mode: "chat",
         isStreaming: true,
-        meta: "MODEL: nemotron-3-super-120b",
+        meta: `MODEL: ${modelLabel ?? modelId ?? "nemotron-super"}`,
         timestamp: Date.now(),
       },
     ]);
@@ -126,6 +126,7 @@ export function useAether() {
         },
         body: JSON.stringify({
           messages: [...conversationHistory, { role: "user", content: input }],
+          modelId: modelId ?? "nemotron-super",
         }),
         signal: abortRef.current.signal,
       });
