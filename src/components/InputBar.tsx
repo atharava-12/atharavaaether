@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { CornerDownLeft, Image as ImageIcon, MessageSquare, Mic, MicOff } from "lucide-react";
+import { CornerDownLeft, Mic, MicOff } from "lucide-react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 
 interface InputBarProps {
@@ -12,7 +12,7 @@ interface InputBarProps {
 
 const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalValueConsumed }: InputBarProps) => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"chat" | "image">("chat");
+  const mode: "chat" | "image" = "chat";
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Handle external value (e.g. from suggested prompts)
@@ -58,26 +58,6 @@ const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalVal
         </div>
       )}
       <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex items-center gap-1 px-4 pt-3">
-          <button
-            onClick={() => setMode("chat")}
-            className={`flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide transition-colors ${
-              mode === "chat" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            <MessageSquare size={12} />
-            Q&A
-          </button>
-          <button
-            onClick={() => setMode("image")}
-            className={`flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide transition-colors ${
-              mode === "image" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            <ImageIcon size={12} />
-            IMAGE
-          </button>
-        </div>
 
         <div className="flex items-end gap-2 px-4 pb-3 pt-2">
           <textarea

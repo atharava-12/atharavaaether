@@ -12,11 +12,35 @@ const readGuestConvs = (): Conv[] => {
 const writeGuestConvs = (convs: Conv[]) => localStorage.setItem(GUEST_STORAGE_KEYS.CONVERSATIONS, JSON.stringify(convs));
 const guestMsgKey = (id: string) => `${GUEST_STORAGE_KEYS.MESSAGES}_${id}`;
 
+const ACTIVE_KEY = "chitchat:activeConversationId";
+
 export function useChatStorage(userId: string | undefined) {
   const { isGuest } = useGuestMode();
   const [conversations, setConversations] = useState<Conv[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(ACTIVE_KEY);
+  });
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const setActiveConversationId = useCallback((id: string | null) => {
+    setActiveConversationIdState(id);
+    if (typeof window !== "undefined") {
+      if (id) window.localStorage.setItem(ACTIVE_KEY, id);
+      else window.localStorage.removeItem(ACTIVE_KEY);
+    }
+    // Notify other hook instances in the same tab
+    window.dispatchEvent(new CustomEvent("chitchat:active-conversation-changed", { detail: id }));
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as string | null;
+      setActiveConversationIdState(detail ?? null);
+    };
+    window.addEventListener("chitchat:active-conversation-changed", handler);
+    return () => window.removeEventListener("chitchat:active-conversation-changed", handler);
+  }, []);
 
   const loadConversations = useCallback(async () => {
     if (isGuest) {
