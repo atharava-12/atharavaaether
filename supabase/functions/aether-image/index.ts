@@ -5,6 +5,58 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/**
+ * Upload an image to NVIDIA Cloud Functions (NVCF) asset store and
+ * return a reference string in the form expected by Flux:
+ *   "data:<mime>;asset_id,<UUID>"
+ */
+async function uploadNvcfAsset(dataUrl: string, apiKey: string): Promise<string> {
+  // Parse the data URL: data:<mime>;base64,<payload>
+  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl.trim());
+  if (!match) {
+    throw new Error("Image must be a base64 data URL (data:image/...;base64,...)");
+  }
+  const contentType = match[1];
+  const base64Body = match[2].replace(/\s/g, "");
+
+  // 1) Request an upload URL from NVCF.
+  const authResp = await fetch("https://api.nvcf.nvidia.com/v2/nvcf/assets", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      contentType,
+      description: "aether-image-edit-input",
+    }),
+  });
+  if (!authResp.ok) {
+    const t = await authResp.text();
+    throw new Error(`Asset auth failed (${authResp.status}): ${t.slice(0, 200)}`);
+  }
+  const { uploadUrl, assetId } = await authResp.json();
+  if (!uploadUrl || !assetId) throw new Error("Asset auth returned no uploadUrl/assetId");
+
+  // 2) PUT the raw bytes to the pre-signed URL.
+  const bytes = Uint8Array.from(atob(base64Body), (c) => c.charCodeAt(0));
+  const putResp = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": contentType,
+      "x-amz-meta-nvcf-asset-description": "aether-image-edit-input",
+    },
+    body: bytes,
+  });
+  if (!putResp.ok) {
+    const t = await putResp.text();
+    throw new Error(`Asset upload failed (${putResp.status}): ${t.slice(0, 200)}`);
+  }
+
+  return `data:${contentType};asset_id,${assetId}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
