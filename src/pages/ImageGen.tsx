@@ -34,7 +34,9 @@ const ImageGen = () => {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [sourceImage, setSourceImage] = useState<string | null>(null);
+  const [modelId, setModelId] = useState<ImageModelId>(DEFAULT_IMAGE_MODEL_ID);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentModel = getImageModel(modelId);
 
   if (isGuest) {
     return (
