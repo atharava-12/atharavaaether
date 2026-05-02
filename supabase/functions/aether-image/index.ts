@@ -5,6 +5,58 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/**
+ * Upload an image to NVIDIA Cloud Functions (NVCF) asset store and
+ * return a reference string in the form expected by Flux:
+ *   "data:<mime>;asset_id,<UUID>"
+ */
+async function uploadNvcfAsset(dataUrl: string, apiKey: string): Promise<string> {
+  // Parse the data URL: data:<mime>;base64,<payload>
+  const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl.trim());
+  if (!match) {
+    throw new Error("Image must be a base64 data URL (data:image/...;base64,...)");
+  }
+  const contentType = match[1];
+  const base64Body = match[2].replace(/\s/g, "");
+
+  // 1) Request an upload URL from NVCF.
+  const authResp = await fetch("https://api.nvcf.nvidia.com/v2/nvcf/assets", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      contentType,
+      description: "aether-image-edit-input",
+    }),
+  });
+  if (!authResp.ok) {
+    const t = await authResp.text();
+    throw new Error(`Asset auth failed (${authResp.status}): ${t.slice(0, 200)}`);
+  }
+  const { uploadUrl, assetId } = await authResp.json();
+  if (!uploadUrl || !assetId) throw new Error("Asset auth returned no uploadUrl/assetId");
+
+  // 2) PUT the raw bytes to the pre-signed URL.
+  const bytes = Uint8Array.from(atob(base64Body), (c) => c.charCodeAt(0));
+  const putResp = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": contentType,
+      "x-amz-meta-nvcf-asset-description": "aether-image-edit-input",
+    },
+    body: bytes,
+  });
+  if (!putResp.ok) {
+    const t = await putResp.text();
+    throw new Error(`Asset upload failed (${putResp.status}): ${t.slice(0, 200)}`);
+  }
+
+  return `data:${contentType};asset_id,${assetId}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -17,14 +69,13 @@ serve(async (req) => {
       });
     }
 
-    // Optional: image input enables editing mode. Accepts a data URL string or array of strings.
-    let imageInput: string[] | null = null;
-    if (typeof image === "string" && image.length > 0) {
-      imageInput = [image];
-    } else if (Array.isArray(image) && image.length > 0) {
-      imageInput = image.filter((v): v is string => typeof v === "string" && v.length > 0);
-      if (imageInput.length === 0) imageInput = null;
-    }
+    // Optional: image input enables editing mode. Accepts a single data URL string.
+    const rawImage =
+      typeof image === "string" && image.length > 0
+        ? image
+        : Array.isArray(image) && typeof image[0] === "string"
+          ? image[0]
+          : null;
 
     const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
     if (!NVIDIA_API_KEY) {
@@ -34,6 +85,20 @@ serve(async (req) => {
       });
     }
 
+    // If editing, upload the image as an NVCF asset and reference it by asset_id.
+    let imageRef: string | null = null;
+    if (rawImage) {
+      try {
+        imageRef = await uploadNvcfAsset(rawImage, NVIDIA_API_KEY);
+      } catch (e) {
+        console.error("NVCF asset upload failed:", e);
+        return new Response(
+          JSON.stringify({ error: e instanceof Error ? e.message : "Image upload failed" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const payload: Record<string, unknown> = {
       prompt,
       width: 1024,
@@ -41,8 +106,13 @@ serve(async (req) => {
       seed: 0,
       steps: 4,
     };
-    if (imageInput) {
-      payload.image = imageInput;
+    const extraHeaders: Record<string, string> = {};
+    if (imageRef) {
+      // NVIDIA expects the image field to reference the uploaded asset.
+      payload.image = [imageRef];
+      // Tell the gateway which assets are attached to this invocation.
+      const assetId = imageRef.split(",")[1];
+      extraHeaders["NVCF-INPUT-ASSET-REFERENCES"] = assetId;
     }
 
     const response = await fetch(
@@ -53,6 +123,7 @@ serve(async (req) => {
           Authorization: `Bearer ${NVIDIA_API_KEY}`,
           Accept: "application/json",
           "Content-Type": "application/json",
+          ...extraHeaders,
         },
         body: JSON.stringify(payload),
       }
