@@ -17,14 +17,13 @@ serve(async (req) => {
       });
     }
 
-    // Optional: image input enables editing mode. Accepts a data URL string or array of strings.
-    let imageInput: string[] | null = null;
-    if (typeof image === "string" && image.length > 0) {
-      imageInput = [image];
-    } else if (Array.isArray(image) && image.length > 0) {
-      imageInput = image.filter((v): v is string => typeof v === "string" && v.length > 0);
-      if (imageInput.length === 0) imageInput = null;
-    }
+    // Optional: image input enables editing mode. Accepts a single data URL string.
+    const rawImage =
+      typeof image === "string" && image.length > 0
+        ? image
+        : Array.isArray(image) && typeof image[0] === "string"
+          ? image[0]
+          : null;
 
     const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
     if (!NVIDIA_API_KEY) {
@@ -34,6 +33,20 @@ serve(async (req) => {
       });
     }
 
+    // If editing, upload the image as an NVCF asset and reference it by asset_id.
+    let imageRef: string | null = null;
+    if (rawImage) {
+      try {
+        imageRef = await uploadNvcfAsset(rawImage, NVIDIA_API_KEY);
+      } catch (e) {
+        console.error("NVCF asset upload failed:", e);
+        return new Response(
+          JSON.stringify({ error: e instanceof Error ? e.message : "Image upload failed" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const payload: Record<string, unknown> = {
       prompt,
       width: 1024,
@@ -41,8 +54,13 @@ serve(async (req) => {
       seed: 0,
       steps: 4,
     };
-    if (imageInput) {
-      payload.image = imageInput;
+    const extraHeaders: Record<string, string> = {};
+    if (imageRef) {
+      // NVIDIA expects the image field to reference the uploaded asset.
+      payload.image = [imageRef];
+      // Tell the gateway which assets are attached to this invocation.
+      const assetId = imageRef.split(",")[1];
+      extraHeaders["NVCF-INPUT-ASSET-REFERENCES"] = assetId;
     }
 
     const response = await fetch(
