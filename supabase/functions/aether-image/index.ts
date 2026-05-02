@@ -9,12 +9,21 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, image } = await req.json();
     if (!prompt || typeof prompt !== "string") {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Optional: image input enables editing mode. Accepts a data URL string or array of strings.
+    let imageInput: string[] | null = null;
+    if (typeof image === "string" && image.length > 0) {
+      imageInput = [image];
+    } else if (Array.isArray(image) && image.length > 0) {
+      imageInput = image.filter((v): v is string => typeof v === "string" && v.length > 0);
+      if (imageInput.length === 0) imageInput = null;
     }
 
     const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
