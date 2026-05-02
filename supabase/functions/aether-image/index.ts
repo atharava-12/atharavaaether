@@ -71,6 +71,7 @@ serve(async (req) => {
           Authorization: `Bearer ${NVIDIA_API_KEY}`,
           Accept: "application/json",
           "Content-Type": "application/json",
+          ...extraHeaders,
         },
         body: JSON.stringify(payload),
       }
