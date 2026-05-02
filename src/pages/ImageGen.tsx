@@ -74,8 +74,19 @@ const ImageGen = () => {
     setLoading(true);
     const isEdit = Boolean(sourceImage);
     try {
-      const body: Record<string, unknown> = { prompt };
-      if (sourceImage) body.image = sourceImage;
+      const body: Record<string, unknown> = {
+        prompt,
+        provider: currentModel.provider,
+        model: currentModel.apiModel,
+      };
+      if (sourceImage) {
+        if (!currentModel.supportsEdit) {
+          toast.error(`${currentModel.label} does not support image editing. Switch to Flux 2 Klein.`);
+          setLoading(false);
+          return;
+        }
+        body.image = sourceImage;
+      }
 
       const { data, error } = await supabase.functions.invoke("aether-image", { body });
       const errMsg =
