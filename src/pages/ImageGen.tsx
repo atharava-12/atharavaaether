@@ -1,10 +1,22 @@
 import { useRef, useState } from "react";
-import { Image as ImageIcon, Sparkles, Loader2, Download, Upload, X, Wand2 } from "lucide-react";
+import { Image as ImageIcon, Sparkles, Loader2, Download, Upload, X, Wand2, ChevronDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import GuestLockScreen from "@/components/GuestLockScreen";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  IMAGE_MODELS,
+  DEFAULT_IMAGE_MODEL_ID,
+  getImageModel,
+  type ImageModelId,
+} from "@/lib/imageModels";
 
 interface GeneratedImage { id: string; prompt: string; url: string; edited?: boolean }
 
