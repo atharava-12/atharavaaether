@@ -41,6 +41,9 @@ serve(async (req) => {
       seed: 0,
       steps: 4,
     };
+    if (imageInput) {
+      payload.image = imageInput;
+    }
 
     const response = await fetch(
       "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b",
