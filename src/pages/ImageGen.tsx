@@ -1,10 +1,22 @@
 import { useRef, useState } from "react";
-import { Image as ImageIcon, Sparkles, Loader2, Download, Upload, X, Wand2 } from "lucide-react";
+import { Image as ImageIcon, Sparkles, Loader2, Download, Upload, X, Wand2, ChevronDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import GuestLockScreen from "@/components/GuestLockScreen";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  IMAGE_MODELS,
+  DEFAULT_IMAGE_MODEL_ID,
+  getImageModel,
+  type ImageModelId,
+} from "@/lib/imageModels";
 
 interface GeneratedImage { id: string; prompt: string; url: string; edited?: boolean }
 
@@ -22,7 +34,9 @@ const ImageGen = () => {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [sourceImage, setSourceImage] = useState<string | null>(null);
+  const [modelId, setModelId] = useState<ImageModelId>(DEFAULT_IMAGE_MODEL_ID);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentModel = getImageModel(modelId);
 
   if (isGuest) {
     return (
@@ -60,8 +74,19 @@ const ImageGen = () => {
     setLoading(true);
     const isEdit = Boolean(sourceImage);
     try {
-      const body: Record<string, unknown> = { prompt };
-      if (sourceImage) body.image = sourceImage;
+      const body: Record<string, unknown> = {
+        prompt,
+        provider: currentModel.provider,
+        model: currentModel.apiModel,
+      };
+      if (sourceImage) {
+        if (!currentModel.supportsEdit) {
+          toast.error(`${currentModel.label} does not support image editing. Switch to Flux 2 Klein.`);
+          setLoading(false);
+          return;
+        }
+        body.image = sourceImage;
+      }
 
       const { data, error } = await supabase.functions.invoke("aether-image", { body });
       const errMsg =
@@ -95,9 +120,45 @@ const ImageGen = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="noise-overlay" />
-      <header className="h-14 border-b border-border flex items-center px-4 sticky top-0 bg-background/95 backdrop-blur z-10">
-        <ImageIcon size={16} className="text-primary mr-2" />
-        <h1 className="text-sm font-semibold tracking-[-0.02em]">Image Synthesis</h1>
+      <header className="h-14 border-b border-border flex items-center px-4 sticky top-0 bg-background/95 backdrop-blur z-10 gap-2">
+        <ImageIcon size={16} className="text-primary mr-1" />
+        <h1 className="text-sm font-semibold tracking-[-0.02em] flex-1">Image Synthesis</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-border bg-card hover:bg-secondary text-xs font-medium text-foreground transition-colors max-w-[200px]">
+            <span className="truncate">{currentModel.label}</span>
+            <ChevronDown size={11} className="text-muted-foreground shrink-0" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72 bg-popover border-border">
+            <div className="px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Select Image Model
+            </div>
+            {IMAGE_MODELS.map((m) => {
+              const active = m.id === modelId;
+              return (
+                <DropdownMenuItem
+                  key={m.id}
+                  onClick={() => setModelId(m.id)}
+                  className="flex items-start gap-2 cursor-pointer py-2"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-foreground">{m.label}</span>
+                      {active && <Check size={12} className="text-primary" />}
+                      {m.supportsEdit && (
+                        <span className="text-[9px] font-mono text-primary border border-primary/40 rounded px-1">
+                          EDIT
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-mono">
+                      {m.description}
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full pb-40">
