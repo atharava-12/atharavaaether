@@ -12,7 +12,8 @@ type ModelId =
   | "nemotron-super"
   | "nemotron-nano"
   | "mistral-large"
-  | "mistral-small";
+  | "mistral-small"
+  | "gemma-3n";
 
 function buildPayload(modelId: ModelId, messages: unknown[]) {
   const base = {
