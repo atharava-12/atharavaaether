@@ -3,7 +3,8 @@ export type ModelId =
   | "nemotron-super"
   | "nemotron-nano"
   | "mistral-large"
-  | "mistral-small";
+  | "mistral-small"
+  | "gemma-3n";
 
 export type SpeedTier = "fast" | "balanced" | "powerful";
 
