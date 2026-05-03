@@ -3,7 +3,8 @@ export type ModelId =
   | "nemotron-super"
   | "nemotron-nano"
   | "mistral-large"
-  | "mistral-small";
+  | "mistral-small"
+  | "gemma-3n";
 
 export type SpeedTier = "fast" | "balanced" | "powerful";
 
@@ -50,6 +51,13 @@ export const MODELS: ModelConfig[] = [
     apiModel: "mistralai/mistral-small-4-119b-2603",
     tier: "fast",
     description: "Quick + high reasoning",
+  },
+  {
+    id: "gemma-3n",
+    label: "Gemma 3n",
+    apiModel: "google/gemma-3n-e4b-it",
+    tier: "fast",
+    description: "Lightweight & efficient",
   },
 ];
 
