@@ -120,10 +120,39 @@ const ImageGen = () => {
         throw new Error(errMsg);
       }
       if (!data?.imageUrl) throw new Error("No image returned");
-      setImages((prev) => [
-        { id: crypto.randomUUID(), prompt, url: data.imageUrl, edited: isEdit },
-        ...prev,
-      ]);
+      const newImg = { id: crypto.randomUUID(), prompt, url: data.imageUrl, edited: isEdit };
+      setImages((prev) => [newImg, ...prev]);
+
+      // Persist to active conversation memory (create if needed)
+      try {
+        let convId = storage.activeConversationId;
+        if (!convId) {
+          convId = await storage.createConversation(prompt.slice(0, 60));
+        }
+        if (convId) {
+          await storage.saveMessage(convId, {
+            id: crypto.randomUUID(),
+            role: "user",
+            content: prompt,
+            type: "text",
+            mode: "image",
+            timestamp: Date.now(),
+          });
+          await storage.saveMessage(convId, {
+            id: newImg.id,
+            role: "assistant",
+            content: prompt,
+            type: "image",
+            mode: "image",
+            imageUrl: data.imageUrl,
+            meta: `MODEL: ${currentModel.label}`,
+            timestamp: Date.now(),
+          });
+        }
+      } catch (err) {
+        console.error("Failed to save image to memory:", err);
+      }
+
       setPrompt("");
       setSourceImage(null);
     } catch (e) {
