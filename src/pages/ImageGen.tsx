@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Sparkles, Loader2, Download, Upload, X, Wand2, ChevronDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import { useAuth } from "@/hooks/useAuth";
+import { useChatStorage } from "@/hooks/useChatStorage";
 import GuestLockScreen from "@/components/GuestLockScreen";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
@@ -30,6 +32,8 @@ const fileToDataUrl = (file: File) =>
 
 const ImageGen = () => {
   const { isGuest } = useGuestMode();
+  const { user } = useAuth();
+  const storage = useChatStorage(user?.id);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -37,6 +41,18 @@ const ImageGen = () => {
   const [modelId, setModelId] = useState<ImageModelId>(DEFAULT_IMAGE_MODEL_ID);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentModel = getImageModel(modelId);
+
+  // Load existing images from active chat conversation
+  useEffect(() => {
+    const id = storage.activeConversationId;
+    if (!id) { setImages([]); return; }
+    storage.loadMessages(id).then((msgs) => {
+      const imgMsgs = msgs
+        .filter((m) => m.type === "image" && m.imageUrl)
+        .map((m) => ({ id: m.id, prompt: m.content, url: m.imageUrl as string }));
+      setImages(imgMsgs.reverse());
+    });
+  }, [storage.activeConversationId]);
 
   if (isGuest) {
     return (
@@ -104,10 +120,39 @@ const ImageGen = () => {
         throw new Error(errMsg);
       }
       if (!data?.imageUrl) throw new Error("No image returned");
-      setImages((prev) => [
-        { id: crypto.randomUUID(), prompt, url: data.imageUrl, edited: isEdit },
-        ...prev,
-      ]);
+      const newImg = { id: crypto.randomUUID(), prompt, url: data.imageUrl, edited: isEdit };
+      setImages((prev) => [newImg, ...prev]);
+
+      // Persist to active conversation memory (create if needed)
+      try {
+        let convId = storage.activeConversationId;
+        if (!convId) {
+          convId = await storage.createConversation(prompt.slice(0, 60));
+        }
+        if (convId) {
+          await storage.saveMessage(convId, {
+            id: crypto.randomUUID(),
+            role: "user",
+            content: prompt,
+            type: "text",
+            mode: "image",
+            timestamp: Date.now(),
+          });
+          await storage.saveMessage(convId, {
+            id: newImg.id,
+            role: "assistant",
+            content: prompt,
+            type: "image",
+            mode: "image",
+            imageUrl: data.imageUrl,
+            meta: `MODEL: ${currentModel.label}`,
+            timestamp: Date.now(),
+          });
+        }
+      } catch (err) {
+        console.error("Failed to save image to memory:", err);
+      }
+
       setPrompt("");
       setSourceImage(null);
     } catch (e) {

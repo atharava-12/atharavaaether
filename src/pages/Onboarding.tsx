@@ -40,7 +40,9 @@ const Onboarding = () => {
           onboarding_complete: true,
         } as any)
         .eq("id", user.id);
-      navigate("/", { replace: true });
+      // Trigger first-run feature tour on Index
+      localStorage.removeItem("chitchat:tourSeen");
+      navigate("/?tour=1", { replace: true });
     } catch {
       setSaving(false);
     }

@@ -7,6 +7,7 @@ import UserMessage from "@/components/UserMessage";
 import SuggestedPrompts from "@/components/SuggestedPrompts";
 import BottomNav from "@/components/BottomNav";
 import ModelSelector from "@/components/ModelSelector";
+import FeatureTour from "@/components/FeatureTour";
 import { useAether } from "@/hooks/useAether";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
@@ -110,11 +111,11 @@ const Index = () => {
           {isGuest && <span className="text-[9px] font-mono uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5 ml-1">Guest</span>}
         </div>
         <div className="flex items-center gap-1.5">
-          <ModelSelector modelId={modelId} onChange={setModelId} />
-          <button onClick={handleNewChat} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
+          <div data-tour="model"><ModelSelector modelId={modelId} onChange={setModelId} /></div>
+          <button data-tour="new-chat" onClick={handleNewChat} className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
             <Plus size={12} /> New
           </button>
-          <Link to="/settings" className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
+          <Link to="/settings" data-tour="settings" className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
             <SettingsIcon size={14} />
           </Link>
         </div>
@@ -161,7 +162,7 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-30">
+      <div className="fixed bottom-16 left-0 right-0 z-30" data-tour="input">
         <InputBar
           onSubmit={(input) => handleSend(input, "chat")}
           isLoading={isLoading}
@@ -172,6 +173,7 @@ const Index = () => {
       </div>
 
       <BottomNav />
+      <FeatureTour />
     </div>
   );
 };
