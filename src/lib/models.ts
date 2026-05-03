@@ -52,6 +52,13 @@ export const MODELS: ModelConfig[] = [
     tier: "fast",
     description: "Quick + high reasoning",
   },
+  {
+    id: "gemma-3n",
+    label: "Gemma 3n",
+    apiModel: "google/gemma-3n-e4b-it",
+    tier: "fast",
+    description: "Lightweight & efficient",
+  },
 ];
 
 export const TIER_META: Record<SpeedTier, { icon: string; label: string }> = {
