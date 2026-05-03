@@ -1,7 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Sparkles, Loader2, Download, Upload, X, Wand2, ChevronDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import { useAuth } from "@/hooks/useAuth";
+import { useChatStorage } from "@/hooks/useChatStorage";
 import GuestLockScreen from "@/components/GuestLockScreen";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
@@ -30,6 +32,8 @@ const fileToDataUrl = (file: File) =>
 
 const ImageGen = () => {
   const { isGuest } = useGuestMode();
+  const { user } = useAuth();
+  const storage = useChatStorage(user?.id);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -37,6 +41,18 @@ const ImageGen = () => {
   const [modelId, setModelId] = useState<ImageModelId>(DEFAULT_IMAGE_MODEL_ID);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentModel = getImageModel(modelId);
+
+  // Load existing images from active chat conversation
+  useEffect(() => {
+    const id = storage.activeConversationId;
+    if (!id) { setImages([]); return; }
+    storage.loadMessages(id).then((msgs) => {
+      const imgMsgs = msgs
+        .filter((m) => m.type === "image" && m.imageUrl)
+        .map((m) => ({ id: m.id, prompt: m.content, url: m.imageUrl as string }));
+      setImages(imgMsgs.reverse());
+    });
+  }, [storage.activeConversationId]);
 
   if (isGuest) {
     return (
