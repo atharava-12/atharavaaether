@@ -73,6 +73,16 @@ function buildPayload(modelId: ModelId, messages: unknown[]) {
         top_p: 1.0,
         reasoning_effort: "high",
       };
+    case "gemma-3n":
+      return {
+        ...base,
+        model: "google/gemma-3n-e4b-it",
+        max_tokens: 512,
+        temperature: 0.2,
+        top_p: 0.7,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      };
     default:
       return {
         ...base,
