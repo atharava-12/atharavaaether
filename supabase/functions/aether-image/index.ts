@@ -237,11 +237,34 @@ serve(async (req) => {
     const model = body.model ?? "";
 
     let imageUrl: string;
+    let fallback = false;
+    let fallbackModel: string | undefined;
+    let fallbackReason: string | undefined;
+    let fallbackMessage: string | undefined;
     try {
       if (provider === "lovable") {
         const key = Deno.env.get("LOVABLE_API_KEY");
         if (!key) return json(500, { error: "LOVABLE_API_KEY is not configured" });
-        imageUrl = await callLovableImage(prompt, rawImage, model, key);
+        try {
+          imageUrl = await callLovableImage(prompt, rawImage, model, key);
+        } catch (lovErr) {
+          const lerr = lovErr as { status?: number; message?: string };
+          const isQuota =
+            lerr.status === 402 ||
+            /usage limit|402|payment required|credits/i.test(lerr.message ?? "");
+          const nvKey = Deno.env.get("NVIDIA_API_KEY");
+          if (isQuota && nvKey) {
+            console.log("[fallback] Lovable AI 402 — switching to NVIDIA Flux 2 Klein");
+            imageUrl = await callNvidiaFlux(prompt, rawImage, nvKey);
+            fallback = true;
+            fallbackModel = "NVIDIA Flux 2 Klein";
+            fallbackReason = "Lovable AI usage limit reached";
+            fallbackMessage =
+              "Nano Banana is not working right now, please try again. Using NVIDIA Flux 2 for image generation.";
+          } else {
+            throw lovErr;
+          }
+        }
       } else if (provider === "nvidia") {
         const key = Deno.env.get("NVIDIA_API_KEY");
         if (!key) return json(500, { error: "NVIDIA_API_KEY is not configured" });
@@ -258,10 +281,11 @@ serve(async (req) => {
       console.error("Image provider error:", status, err.message);
       if (status === 401) return json(401, { error: "Invalid API key for selected provider." });
       if (status === 429) return json(429, { error: "Rate limit exceeded. Try again shortly." });
+      if (status === 402) return json(402, { error: "Usage limit reached. Please add credits to continue." });
       return json(500, { error: `Image generation failed: ${err.message ?? "unknown error"}` });
     }
 
-    return json(200, { imageUrl });
+    return json(200, { imageUrl, fallback, fallbackModel, fallbackReason, fallbackMessage });
   } catch (e) {
     console.error("Image error:", e);
     return json(500, { error: e instanceof Error ? e.message : "Unknown error" });
