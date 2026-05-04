@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type Provider = "nvidia" | "hf-fal" | "hf-nscale";
+type Provider = "lovable" | "nvidia" | "hf-fal" | "hf-nscale";
 
 interface RequestBody {
   prompt: string;
@@ -110,6 +110,38 @@ async function callNvidiaFlux(prompt: string, image: string | null, apiKey: stri
 }
 
 /* ---------- Hugging Face Inference (router) ---------- */
+
+async function callLovableImage(prompt: string, image: string | null, model: string, apiKey: string): Promise<string> {
+  const content = image
+    ? [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: image } },
+      ]
+    : prompt;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: model || "google/gemini-2.5-flash-image",
+      messages: [{ role: "user", content }],
+      modalities: ["image", "text"],
+    }),
+  });
+
+  if (!response.ok) {
+    const t = await response.text();
+    throw { status: response.status, message: t.slice(0, 300) };
+  }
+
+  const data = await response.json();
+  const imageUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+  if (typeof imageUrl === "string" && imageUrl.length > 0) return imageUrl;
+  throw { status: 500, message: "No image returned by Lovable image model" };
+}
 
 async function callHuggingFace(
   prompt: string,
