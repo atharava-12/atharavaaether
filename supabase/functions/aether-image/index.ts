@@ -230,7 +230,11 @@ serve(async (req) => {
 
     let imageUrl: string;
     try {
-      if (provider === "nvidia") {
+      if (provider === "lovable") {
+        const key = Deno.env.get("LOVABLE_API_KEY");
+        if (!key) return json(500, { error: "LOVABLE_API_KEY is not configured" });
+        imageUrl = await callLovableImage(prompt, rawImage, model, key);
+      } else if (provider === "nvidia") {
         const key = Deno.env.get("NVIDIA_API_KEY");
         if (!key) return json(500, { error: "NVIDIA_API_KEY is not configured" });
         imageUrl = await callNvidiaFlux(prompt, rawImage, key);
