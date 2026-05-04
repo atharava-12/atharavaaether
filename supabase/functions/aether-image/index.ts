@@ -138,8 +138,16 @@ async function callLovableImage(prompt: string, image: string | null, model: str
   }
 
   const data = await response.json();
-  const imageUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+  const msg = data?.choices?.[0]?.message;
+  const imageUrl =
+    msg?.images?.[0]?.image_url?.url ||
+    msg?.images?.[0]?.url ||
+    (typeof msg?.images?.[0] === "string" ? msg.images[0] : null) ||
+    data?.images?.[0]?.image_url?.url ||
+    data?.data?.[0]?.url ||
+    (data?.data?.[0]?.b64_json ? `data:image/png;base64,${data.data[0].b64_json}` : null);
   if (typeof imageUrl === "string" && imageUrl.length > 0) return imageUrl;
+  console.error("Lovable image response shape:", JSON.stringify(data).slice(0, 500));
   throw { status: 500, message: "No image returned by Lovable image model" };
 }
 
