@@ -120,6 +120,20 @@ const ImageGen = () => {
         throw new Error(errMsg);
       }
       if (!data?.imageUrl) throw new Error("No image returned");
+
+      const didFallback = Boolean(data.fallback);
+      const fbModel = data.fallbackModel as string | undefined;
+      if (didFallback) {
+        toast.info(
+          data.fallbackMessage ||
+            `Nano Banana is not working right now, please try again. Using ${fbModel ?? "NVIDIA Flux 2"} for image generation.`,
+          {
+            description: `Model switched: ${currentModel.label} → ${fbModel ?? "NVIDIA Flux 2 Klein"}`,
+            duration: 6000,
+          },
+        );
+      }
+
       const newImg = { id: crypto.randomUUID(), prompt, url: data.imageUrl, edited: isEdit };
       setImages((prev) => [newImg, ...prev]);
 
@@ -145,7 +159,9 @@ const ImageGen = () => {
             type: "image",
             mode: "image",
             imageUrl: data.imageUrl,
-            meta: `MODEL: ${currentModel.label}`,
+            meta: didFallback
+              ? `MODEL: ${fbModel ?? "NVIDIA Flux 2 Klein"} (fallback from ${currentModel.label})`
+              : `MODEL: ${currentModel.label}`,
             timestamp: Date.now(),
           });
         }
