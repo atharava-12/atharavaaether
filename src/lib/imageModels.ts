@@ -1,9 +1,9 @@
 export type ImageModelId =
-  | "flux-1-dev"
-  | "flux-1-schnell"
-  | "sdxl";
+  | "gemini-flash-image"
+  | "gemini-flash-image-pro"
+  | "gemini-pro-image";
 
-export type ImageProvider = "nvidia" | "hf-fal" | "hf-nscale";
+export type ImageProvider = "lovable" | "nvidia" | "hf-fal" | "hf-nscale";
 
 export interface ImageModelConfig {
   id: ImageModelId;
@@ -16,32 +16,32 @@ export interface ImageModelConfig {
 
 export const IMAGE_MODELS: ImageModelConfig[] = [
   {
-    id: "flux-1-dev",
-    label: "FLUX.1 Dev",
-    provider: "hf-fal",
-    apiModel: "black-forest-labs/FLUX.1-dev",
-    description: "High quality · text-to-image",
-    supportsEdit: false,
+    id: "gemini-flash-image",
+    label: "Nano Banana",
+    provider: "lovable",
+    apiModel: "google/gemini-2.5-flash-image",
+    description: "Fast image generation and editing",
+    supportsEdit: true,
   },
   {
-    id: "flux-1-schnell",
-    label: "FLUX.1 Schnell",
-    provider: "hf-fal",
-    apiModel: "black-forest-labs/FLUX.1-schnell",
-    description: "Fastest generation",
-    supportsEdit: false,
+    id: "gemini-flash-image-pro",
+    label: "Nano Banana 2",
+    provider: "lovable",
+    apiModel: "google/gemini-3.1-flash-image-preview",
+    description: "Fast pro-quality generation",
+    supportsEdit: true,
   },
   {
-    id: "sdxl",
-    label: "Stable Diffusion XL",
-    provider: "hf-fal",
-    apiModel: "stabilityai/stable-diffusion-xl-base-1.0",
-    description: "Classic SDXL",
-    supportsEdit: false,
+    id: "gemini-pro-image",
+    label: "Nano Banana Pro",
+    provider: "lovable",
+    apiModel: "google/gemini-3-pro-image-preview",
+    description: "Highest quality generation",
+    supportsEdit: true,
   },
 ];
 
-export const DEFAULT_IMAGE_MODEL_ID: ImageModelId = "flux-1-dev";
+export const DEFAULT_IMAGE_MODEL_ID: ImageModelId = "gemini-flash-image";
 
 export const getImageModel = (id: string | null | undefined): ImageModelConfig =>
   IMAGE_MODELS.find((m) => m.id === id) ??
