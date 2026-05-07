@@ -21,7 +21,7 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, allowGuest = false, autoGuest = false }: { children: React.ReactNode; allowGuest?: boolean; autoGuest?: boolean }) {
   const { user, loading } = useAuth();
-  const { isGuest, enterGuestMode } = useGuestMode();
+  const { isGuest, enterGuestMode, exitGuestMode } = useGuestMode();
   const needsOnboarding = useOnboardingCheck(user?.id);
 
   if (loading) return <div className="min-h-screen bg-background" />;
@@ -31,6 +31,8 @@ function ProtectedRoute({ children, allowGuest = false, autoGuest = false }: { c
       enterGuestMode();
       return <>{children}</>;
     }
+    // Locked feature — drop guest session so /auth doesn't bounce back
+    if (isGuest) exitGuestMode();
     return <Navigate to="/auth" replace />;
   }
   if (needsOnboarding === null) return <div className="min-h-screen bg-background" />;
