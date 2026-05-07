@@ -48,7 +48,7 @@ const FeatureTour = () => {
     const handler = () => { setStep(0); setActive(true); };
     window.addEventListener("chitchat:start-tour", handler);
     return () => window.removeEventListener("chitchat:start-tour", handler);
-  }, []);
+  }, [user, isGuest]);
 
   useLayoutEffect(() => {
     if (!active) return;
