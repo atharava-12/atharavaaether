@@ -17,7 +17,7 @@ const Settings = () => {
   const handleLogout = async () => {
     if (isGuest) exitGuestMode();
     else await signOut();
-    navigate("/auth");
+    navigate("/");
   };
 
   const handleDeleteAccount = async () => {
@@ -32,7 +32,7 @@ const Settings = () => {
       toast.error("Failed to delete account. Please try again.");
     } else {
       toast.success("Account deleted successfully.");
-      navigate("/auth");
+      navigate("/");
     }
   };
 
