@@ -19,14 +19,20 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, allowGuest = false }: { children: React.ReactNode; allowGuest?: boolean }) {
+function ProtectedRoute({ children, allowGuest = false, autoGuest = false }: { children: React.ReactNode; allowGuest?: boolean; autoGuest?: boolean }) {
   const { user, loading } = useAuth();
-  const { isGuest } = useGuestMode();
+  const { isGuest, enterGuestMode } = useGuestMode();
   const needsOnboarding = useOnboardingCheck(user?.id);
 
   if (loading) return <div className="min-h-screen bg-background" />;
   if (isGuest && allowGuest) return <>{children}</>;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) {
+    if (autoGuest && allowGuest) {
+      enterGuestMode();
+      return <>{children}</>;
+    }
+    return <Navigate to="/auth" replace />;
+  }
   if (needsOnboarding === null) return <div className="min-h-screen bg-background" />;
   if (needsOnboarding) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
@@ -43,10 +49,10 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<Auth />} />
     <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
-    <Route path="/" element={<ProtectedRoute allowGuest><Index /></ProtectedRoute>} />
-    <Route path="/image" element={<ProtectedRoute allowGuest><ImageGen /></ProtectedRoute>} />
+    <Route path="/" element={<ProtectedRoute allowGuest autoGuest><Index /></ProtectedRoute>} />
+    <Route path="/image" element={<ProtectedRoute><ImageGen /></ProtectedRoute>} />
     
-    <Route path="/memory" element={<ProtectedRoute allowGuest><Memory /></ProtectedRoute>} />
+    <Route path="/memory" element={<ProtectedRoute><Memory /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute allowGuest><Settings /></ProtectedRoute>} />
     <Route path="/privacy" element={<PrivacyPolicy />} />
     <Route path="/terms" element={<Terms />} />
