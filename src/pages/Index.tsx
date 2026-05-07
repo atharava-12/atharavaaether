@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
-import { Zap, Volume2, Plus, Settings as SettingsIcon, UserCircle2 } from "lucide-react";
+import { Zap, Volume2, Plus, Settings as SettingsIcon, UserCircle2, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import InputBar from "@/components/InputBar";
 import ResultModule from "@/components/ResultModule";
@@ -213,13 +214,36 @@ const Index = () => {
                   isStreaming={msg.isStreaming}
                 />
 
-                {!msg.isStreaming && msg.type === "text" && msg.content && (
-                  <button
-                    onClick={() => playTTS(msg.content)}
-                    className="text-xs text-muted-foreground hover:text-primary mt-1"
-                  >
-                    <Volume2 size={12} /> Listen
-                  </button>
+                {!msg.isStreaming && msg.content && (
+                  <div className="flex items-center gap-3 mt-1">
+                    {msg.type === "text" && (
+                      <button
+                        onClick={() => playTTS(msg.content)}
+                        className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+                      >
+                        <Volume2 size={12} /> Listen
+                      </button>
+                    )}
+                    <button
+                      onClick={async () => {
+                        const shareText = `${msg.content}\n\n— via ChitChat AI`;
+                        const shareUrl = window.location.origin;
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({ title: "ChitChat AI", text: shareText, url: shareUrl });
+                          } else {
+                            await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+                            toast.success("Copied to clipboard");
+                          }
+                        } catch (e) {
+                          if ((e as Error)?.name !== "AbortError") toast.error("Share failed");
+                        }
+                      }}
+                      className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+                    >
+                      <Share2 size={12} /> Share
+                    </button>
+                  </div>
                 )}
               </div>
             )
