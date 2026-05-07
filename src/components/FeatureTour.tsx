@@ -1,5 +1,7 @@
 import { useEffect, useState, useLayoutEffect } from "react";
 import { X, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useGuestMode } from "@/hooks/useGuestMode";
 
 interface Step {
   selector: string;
@@ -27,11 +29,14 @@ const FeatureTour = () => {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const { user } = useAuth();
+  const { isGuest } = useGuestMode();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const force = params.get("tour") === "1";
-    if (force || !localStorage.getItem(TOUR_KEY)) {
+    // Only auto-show tour for signed-in users, not guests
+    if (force || (user && !isGuest && !localStorage.getItem(TOUR_KEY))) {
       // Slight delay so target elements are mounted
       setTimeout(() => setActive(true), 400);
       if (force) {
