@@ -228,16 +228,25 @@ const Index = () => {
                       onClick={async () => {
                         const shareText = `${msg.content}\n\n— via ChitChat AI`;
                         const shareUrl = window.location.origin;
-                        try {
-                          if (navigator.share) {
-                            await navigator.share({ title: "ChitChat AI", text: shareText, url: shareUrl });
-                          } else {
+                        const payload = { title: "ChitChat AI", text: shareText, url: shareUrl };
+                        const fallbackCopy = async () => {
+                          try {
                             await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
                             toast.success("Copied to clipboard");
+                          } catch {
+                            toast.error("Could not copy");
                           }
-                        } catch (e) {
-                          if ((e as Error)?.name !== "AbortError") toast.error("Share failed");
+                        };
+                        if (navigator.share && (!navigator.canShare || navigator.canShare(payload))) {
+                          try {
+                            await navigator.share(payload);
+                            return;
+                          } catch (e) {
+                            if ((e as Error)?.name === "AbortError") return;
+                            // Permission denied (iframe), NotAllowed, etc — fall back
+                          }
                         }
+                        await fallbackCopy();
                       }}
                       className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
                     >
