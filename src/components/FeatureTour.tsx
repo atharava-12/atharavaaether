@@ -141,7 +141,7 @@ const FeatureTour = () => {
           <span className="text-[10px] font-mono uppercase tracking-wider text-primary">
             {step + 1} / {STEPS.length}
           </span>
-          <button onClick={finish} className="text-muted-foreground hover:text-foreground -mt-1 -mr-1">
+          <button onClick={finish} aria-label="Close feature tour" className="text-muted-foreground hover:text-foreground -mt-1 -mr-1">
             <X size={14} />
           </button>
         </div>

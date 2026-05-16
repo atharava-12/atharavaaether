@@ -71,6 +71,7 @@ const Memory = () => {
                     e.stopPropagation();
                     if (confirm("Delete this chat permanently?")) storage.deleteConversation(c.id);
                   }}
+                  aria-label={`Delete chat ${c.title}`}
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1"
                 >
                   <Trash2 size={14} />

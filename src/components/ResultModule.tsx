@@ -69,6 +69,7 @@ const ResultModule = ({ type, label, meta, content, imageUrl, isStreaming }: Res
           {type === "text" && (
             <button
               onClick={handleCopy}
+              aria-label={copied ? "Copied" : "Copy response"}
               className="h-7 px-2 rounded text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
             >
               {copied ? <Check size={13} /> : <Copy size={13} />}
@@ -77,6 +78,7 @@ const ResultModule = ({ type, label, meta, content, imageUrl, isStreaming }: Res
           {type === "image" && imageUrl && (
             <button
               onClick={handleDownload}
+              aria-label="Download generated image"
               className="h-7 px-2 rounded text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
             >
               <Download size={13} />
