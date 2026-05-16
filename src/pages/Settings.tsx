@@ -38,15 +38,21 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead
+        title="Settings – ChitChat AI"
+        description="Manage your ChitChat AI account, appearance, language, privacy, and data preferences."
+        path="/settings"
+      />
       <div className="noise-overlay" />
       <header className="fixed top-0 left-0 right-0 z-40 h-12 flex items-center px-4 border-b border-border bg-background/80 backdrop-blur-md">
-        <Link to="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+        <Link to="/" aria-label="Back to home" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
           <ArrowLeft size={16} />
-          <span className="text-sm font-medium">Settings</span>
+          <span className="text-sm font-medium">Back</span>
         </Link>
       </header>
 
-      <div className="pt-16 pb-32 px-4 max-w-md mx-auto space-y-2">
+      <main className="pt-16 pb-32 px-4 max-w-md mx-auto space-y-2">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground px-1 pb-1">Settings</h1>
         {/* User info */}
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="text-sm font-medium text-foreground truncate">{isGuest ? "Guest user" : user?.email}</p>
