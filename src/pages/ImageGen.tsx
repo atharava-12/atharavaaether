@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import GuestLockScreen from "@/components/GuestLockScreen";
 import BottomNav from "@/components/BottomNav";
+import SeoHead from "@/components/SeoHead";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -180,6 +181,11 @@ const ImageGen = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SeoHead
+        title="AI Image Generator – ChitChat AI"
+        description="Generate and edit images with AI in seconds. Describe what you want or upload a photo to remix it with ChitChat."
+        path="/image"
+      />
       <div className="noise-overlay" />
       <header className="h-14 border-b border-border flex items-center px-4 sticky top-0 bg-background/95 backdrop-blur z-10 gap-2">
         <ImageIcon size={16} className="text-primary mr-1" />
@@ -250,12 +256,13 @@ const ImageGen = () => {
                 </p>
                 <button
                   onClick={() => setSourceImage(img.url)}
+                  aria-label="Edit this image"
                   className="text-muted-foreground hover:text-primary"
                   title="Edit this image"
                 >
                   <Wand2 size={14} />
                 </button>
-                <a href={img.url} download={`chitchat-${img.id}.png`} className="text-muted-foreground hover:text-primary">
+                <a href={img.url} download={`chitchat-${img.id}.png`} aria-label="Download image" className="text-muted-foreground hover:text-primary">
                   <Download size={14} />
                 </a>
               </div>
@@ -268,7 +275,7 @@ const ImageGen = () => {
         <div className="max-w-2xl mx-auto flex flex-col gap-2">
           {sourceImage && (
             <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
-              <img src={sourceImage} alt="Source" className="w-12 h-12 rounded object-cover" />
+              <img src={sourceImage} alt="Source image preview for editing" className="w-12 h-12 rounded object-cover" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-mono text-primary">Edit mode</p>
                 <p className="text-[10px] text-muted-foreground truncate">
@@ -277,6 +284,7 @@ const ImageGen = () => {
               </div>
               <button
                 onClick={() => setSourceImage(null)}
+                aria-label="Remove source image"
                 className="text-muted-foreground hover:text-destructive"
                 title="Remove source image"
               >
@@ -298,22 +306,27 @@ const ImageGen = () => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
+              aria-label="Upload image to edit"
               className="h-11 w-11 rounded-xl border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-primary disabled:opacity-50"
               title="Upload image to edit"
             >
               <Upload size={16} />
             </button>
+            <label htmlFor="image-prompt" className="sr-only">Image prompt</label>
             <input
+              id="image-prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
               placeholder={sourceImage ? "Describe the edit (e.g. same at night)" : "A neon-lit cyberpunk cat..."}
               disabled={loading}
+              aria-label="Image prompt"
               className="flex-1 h-11 rounded-xl border border-border bg-card px-4 text-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
+              aria-label={sourceImage ? "Apply edit" : "Generate image"}
               className="h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5"
             >
               {loading ? <Loader2 size={14} className="animate-spin" /> : sourceImage ? <Wand2 size={14} /> : <Sparkles size={14} />}

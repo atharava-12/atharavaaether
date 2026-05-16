@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import BottomNav from "@/components/BottomNav";
+import SeoHead from "@/components/SeoHead";
 
 const Memory = () => {
   const navigate = useNavigate();
@@ -23,6 +24,11 @@ const Memory = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SeoHead
+        title="Chat Memory – ChitChat AI"
+        description="Browse your saved AI conversations and generated images. Resume any chat or start a new one in ChitChat AI."
+        path="/memory"
+      />
       <div className="noise-overlay" />
       <header className="h-14 border-b border-border flex items-center justify-between px-4 sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="flex items-center gap-2">
@@ -71,6 +77,7 @@ const Memory = () => {
                     e.stopPropagation();
                     if (confirm("Delete this chat permanently?")) storage.deleteConversation(c.id);
                   }}
+                  aria-label={`Delete chat ${c.title}`}
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1"
                 >
                   <Trash2 size={14} />

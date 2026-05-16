@@ -60,7 +60,9 @@ const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalVal
       <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden">
 
         <div className="flex items-end gap-2 px-4 pb-3 pt-2">
+          <label htmlFor="chat-input" className="sr-only">Chat message</label>
           <textarea
+            id="chat-input"
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -68,12 +70,14 @@ const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalVal
             placeholder={isOffline ? "You're offline..." : mode === "chat" ? "Ask anything in any language..." : "Describe the image you want to generate..."}
             rows={1}
             disabled={isLoading || isOffline}
+            aria-label="Chat message"
             className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm resize-none outline-none min-h-[36px] max-h-[120px] py-2 font-sans"
           />
           {voiceSupported && (
             <button
               onClick={isListening ? stopListening : startListening}
               disabled={isLoading}
+              aria-label={isListening ? "Stop voice input" : "Start voice input"}
               className={`flex items-center justify-center h-8 w-8 rounded transition-colors shrink-0 mb-1 ${
                 isListening ? "bg-destructive/20 text-destructive animate-pulse" : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
@@ -85,6 +89,7 @@ const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalVal
           <button
             onClick={handleSubmit}
             disabled={!input.trim() || isLoading || isOffline}
+            aria-label="Send message"
             className="flex items-center justify-center h-8 w-8 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0 mb-1"
           >
             <CornerDownLeft size={14} />
@@ -92,7 +97,7 @@ const InputBar = ({ onSubmit, isLoading, isOffline, externalValue, onExternalVal
         </div>
 
         <div className="px-4 pb-2">
-          <p className="text-[10px] text-muted-foreground/50 text-center font-mono">
+          <p className="text-[10px] text-muted-foreground text-center font-mono">
             AI responses may be inaccurate. Verify important information.
           </p>
         </div>

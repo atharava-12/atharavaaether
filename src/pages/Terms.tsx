@@ -1,8 +1,14 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import SeoHead from "@/components/SeoHead";
 
 const Terms = () => (
   <div className="min-h-screen bg-background">
+    <SeoHead
+      title="Terms of Service – ChitChat AI"
+      description="The terms governing your use of ChitChat AI, including acceptable use, AI disclaimer, accounts, and limitation of liability."
+      path="/terms"
+    />
     <div className="noise-overlay" />
     <div className="max-w-2xl mx-auto px-6 py-16">
       <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">

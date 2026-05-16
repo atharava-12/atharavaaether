@@ -110,6 +110,7 @@ const Onboarding = () => {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
+              aria-label="Display name"
               className="max-w-xs text-center text-lg h-12"
               maxLength={50}
               autoFocus
