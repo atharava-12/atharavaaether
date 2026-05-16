@@ -181,6 +181,11 @@ const ImageGen = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SeoHead
+        title="AI Image Generator – ChitChat AI"
+        description="Generate and edit images with AI in seconds. Describe what you want or upload a photo to remix it with ChitChat."
+        path="/image"
+      />
       <div className="noise-overlay" />
       <header className="h-14 border-b border-border flex items-center px-4 sticky top-0 bg-background/95 backdrop-blur z-10 gap-2">
         <ImageIcon size={16} className="text-primary mr-1" />

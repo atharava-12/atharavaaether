@@ -24,6 +24,11 @@ const Memory = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SeoHead
+        title="Chat Memory – ChitChat AI"
+        description="Browse your saved AI conversations and generated images. Resume any chat or start a new one in ChitChat AI."
+        path="/memory"
+      />
       <div className="noise-overlay" />
       <header className="h-14 border-b border-border flex items-center justify-between px-4 sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="flex items-center gap-2">
