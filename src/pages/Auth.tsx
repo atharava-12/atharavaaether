@@ -94,7 +94,7 @@ const Auth = () => {
         <p className="text-[10px] text-muted-foreground/50 text-center font-mono">
           AI responses may be inaccurate. Verify important information.
         </p>
-      </div>
+      </main>
     </div>
   );
 };
