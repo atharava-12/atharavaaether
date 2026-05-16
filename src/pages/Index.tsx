@@ -120,13 +120,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SeoHead
+        title="ChitChat AI – Free AI Chat & Image Generator"
+        description="Chat with AI and generate images instantly. Multilingual, fast, and free — built for natural conversations and creative work."
+        path="/"
+      />
       <div className="noise-overlay" />
 
       {/* HEADER */}
       <header className="h-14 border-b border-border flex items-center justify-between px-4 sticky top-0 bg-background/95 backdrop-blur z-30">
         <div className="flex items-center gap-2">
           <Zap size={16} className="text-primary" />
-          <h1 className="text-sm font-semibold tracking-[-0.02em]">ChitChat</h1>
+          <span className="text-sm font-semibold tracking-[-0.02em]">ChitChat</span>
           {isGuest && (
             <span className="text-[9px] font-mono uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5 ml-1">
               Guest
@@ -139,6 +144,7 @@ const Index = () => {
 
           <button
             onClick={handleNewChat}
+            aria-label="Start a new chat"
             className="flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground"
           >
             <Plus size={12} /> New
@@ -146,6 +152,7 @@ const Index = () => {
 
           <Link
             to="/settings"
+            aria-label="Open settings"
             className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground"
           >
             <SettingsIcon size={14} />
@@ -166,7 +173,7 @@ const Index = () => {
       )}
 
       {/* MAIN */}
-      <div ref={scrollRef} className="flex-1 pb-32 px-4 max-w-3xl mx-auto w-full overflow-y-auto">
+      <main ref={scrollRef} className="flex-1 pb-32 px-4 max-w-3xl mx-auto w-full overflow-y-auto">
 
         {/* 🔥 UPDATED EMPTY STATE WITH SEO */}
         {messages.length === 0 && (
