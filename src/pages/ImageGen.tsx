@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import GuestLockScreen from "@/components/GuestLockScreen";
 import BottomNav from "@/components/BottomNav";
+import SeoHead from "@/components/SeoHead";
 import { toast } from "sonner";
 import {
   DropdownMenu,

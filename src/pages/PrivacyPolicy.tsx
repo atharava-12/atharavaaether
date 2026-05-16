@@ -1,9 +1,15 @@
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import SeoHead from "@/components/SeoHead";
 
 const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-background text-foreground px-6 py-8 max-w-3xl mx-auto">
+      <SeoHead
+        title="Privacy Policy – ChitChat AI"
+        description="How ChitChat AI collects, uses, and protects your data, including chat history, voice input, and generated content."
+        path="/privacy"
+      />
       <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
         <ArrowLeft size={16} /> Back to ChitChat
       </Link>

@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import BottomNav from "@/components/BottomNav";
+import SeoHead from "@/components/SeoHead";
 
 const Memory = () => {
   const navigate = useNavigate();
