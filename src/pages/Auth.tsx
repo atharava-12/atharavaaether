@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Zap, UserCircle2, Apple } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import SeoHead from "@/components/SeoHead";
 import { toast } from "sonner";
 
 const Auth = () => {
@@ -41,13 +42,18 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+      <SeoHead
+        title="Sign in to ChitChat AI"
+        description="Sign in to ChitChat AI with Google or Apple to save chats, generate images, and access your memory across devices."
+        path="/auth"
+      />
       <div className="noise-overlay" />
-      <div className="w-full max-w-sm space-y-7 relative z-10">
+      <main className="w-full max-w-sm space-y-7 relative z-10">
         <div className="flex flex-col items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center">
             <Zap size={24} className="text-primary" />
           </div>
-          <h1 className="text-xl font-semibold tracking-[-0.03em] text-foreground">ChitChat</h1>
+          <h1 className="text-xl font-semibold tracking-[-0.03em] text-foreground">Sign in to ChitChat</h1>
           <p className="text-sm text-muted-foreground font-mono">Smart conversations, anytime</p>
         </div>
 

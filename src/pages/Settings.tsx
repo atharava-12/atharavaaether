@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import BottomNav from "@/components/BottomNav";
+import SeoHead from "@/components/SeoHead";
 import { toast } from "sonner";
 
 const Settings = () => {
@@ -109,7 +110,7 @@ const Settings = () => {
             {deleting ? "Deleting..." : "Delete Account"}
           </button>
         )}
-      </div>
+      </main>
 
       <BottomNav />
     </div>
