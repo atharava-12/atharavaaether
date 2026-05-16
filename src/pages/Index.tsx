@@ -9,6 +9,7 @@ import SuggestedPrompts from "@/components/SuggestedPrompts";
 import BottomNav from "@/components/BottomNav";
 import ModelSelector from "@/components/ModelSelector";
 import FeatureTour from "@/components/FeatureTour";
+import SeoHead from "@/components/SeoHead";
 import { useAether } from "@/hooks/useAether";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
