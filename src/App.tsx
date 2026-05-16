@@ -49,7 +49,8 @@ function OnboardingRoute({ children }: { children: React.ReactNode }) {
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/auth" element={<Auth />} />
+    <Route path="/auth" element={<Auth />} />  
+    <Route path="/signin" element={<Navigate to="/auth" replace />} />
     <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
     <Route path="/" element={<ProtectedRoute allowGuest autoGuest><Index /></ProtectedRoute>} />
     <Route path="/image" element={<ProtectedRoute><ImageGen /></ProtectedRoute>} />
