@@ -10,11 +10,7 @@
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://your-api.example.com/:path*"
-    },
-    {
-      "source": "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|public).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
