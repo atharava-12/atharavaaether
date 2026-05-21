@@ -2,7 +2,15 @@
 
 import { createLovableAuth } from "@lovable.dev/cloud-auth-js";
 import { supabase } from "../supabase/client";
-const lovableAuth = createLovableAuth();
+
+const isLovableSandbox = typeof window !== "undefined" && window.location.hostname.endsWith(".lovable.app");
+const oauthBrokerUrl = isLovableSandbox
+  ? "/~oauth/initiate"
+  : "https://atharavaaether.lovable.app/~oauth/initiate";
+
+const lovableAuth = createLovableAuth({
+  oauthBrokerUrl,
+});
 
 type SignInOptions = {
   redirect_uri?: string;

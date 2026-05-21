@@ -1,31 +1,15 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "public": false,
+  "cleanUrls": true,
   "redirects": [
     {
       "source": "/signin",
       "destination": "/auth",
-      "permanent": false
-    },
-    {
-      "source": "/login",
-      "destination": "/auth",
-      "permanent": false
+      "permanent": true
     }
   ],
   "rewrites": [
     {
-      "source": "/index.html",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/assets/:path*",
-      "destination": "/assets/:path*"
-    },
-    {
-      "source": "/:path*",
+      "source": "/((?!assets/|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -35,29 +19,16 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
         }
       ]
     },
     {
-      "source": "/assets/:path*",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/:path*",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
         }
       ]
     }
