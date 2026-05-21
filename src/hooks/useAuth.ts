@@ -47,12 +47,10 @@ export function useAuth() {
   }, []);
 
   const openOAuth = useCallback(async (provider: "google" | "apple") => {
+    const isLovableSandbox = typeof window !== "undefined" && window.location.hostname.endsWith(".lovable.app");
+
     if (isNative()) {
       // On native: open in in-app browser
-      // We construct the same URL the lovable helper would use, but redirect to a deep link
-      // Simplest approach: trigger lovable.auth.signInWithOAuth and let it window.location.href,
-      // but intercept by overriding location via Browser plugin.
-      const origAssign = window.location.assign.bind(window.location);
       const origHref = Object.getOwnPropertyDescriptor(window.location, "href");
       let captured: string | null = null;
       try {
@@ -62,25 +60,50 @@ export function useAuth() {
           set: (v: string) => { captured = v; },
           get: () => origHref?.get?.call(window.location) ?? "",
         });
-        const result = await lovable.auth.signInWithOAuth(provider, {
-          redirect_uri: window.location.origin,
-        });
+
+        let result;
+        if (isLovableSandbox) {
+          result = await lovable.auth.signInWithOAuth(provider, {
+            redirect_uri: window.location.origin,
+          });
+        } else {
+          result = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+              redirectTo: window.location.origin,
+            },
+          });
+        }
+
         // Restore
         if (origHref) Object.defineProperty(window.location, "href", origHref);
         if (captured) {
           await Browser.open({ url: captured, presentationStyle: "popover" });
           return { error: null };
         }
-        return result;
+        return { error: result.error || null };
       } catch (e) {
         if (origHref) Object.defineProperty(window.location, "href", origHref);
         return { error: e instanceof Error ? e : new Error(String(e)) };
       }
     }
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-    });
-    return { error: error || null };
+
+    if (isLovableSandbox) {
+      // In the Lovable sandbox, use Lovable's OAuth broker proxy
+      const { error } = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      return { error: error || null };
+    } else {
+      // On standard local development (localhost) or Vercel custom domains, use direct Supabase OAuth
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+      return { error: error || null };
+    }
   }, []);
 
   const signInWithGoogle = useCallback(() => openOAuth("google"), [openOAuth]);
