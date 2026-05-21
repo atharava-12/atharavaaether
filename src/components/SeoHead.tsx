@@ -6,7 +6,7 @@ interface SeoHeadProps {
   path: string;
 }
 
-const SITE = "https://atharavaaether.lovable.app";
+const SITE = "https://chitchatgen.lovable.app";
 
 const SeoHead = ({ title, description, path }: SeoHeadProps) => {
   const url = `${SITE}${path}`;

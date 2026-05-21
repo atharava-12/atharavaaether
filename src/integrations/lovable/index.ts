@@ -6,7 +6,7 @@ import { supabase } from "../supabase/client";
 const isLovableSandbox = typeof window !== "undefined" && window.location.hostname.endsWith(".lovable.app");
 const oauthBrokerUrl = isLovableSandbox
   ? "/~oauth/initiate"
-  : "https://atharavaaether.lovable.app/~oauth/initiate";
+  : "https://chitchatgen.lovable.app/~oauth/initiate";
 
 const lovableAuth = createLovableAuth({
   oauthBrokerUrl,
