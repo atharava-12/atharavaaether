@@ -52,6 +52,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<Auth />} />  
     <Route path="/signin" element={<Navigate to="/auth" replace />} />
     <Route path="/index.html" element={<Navigate to="/" replace />} />
+    <Route path="/~oauth/callback" element={<div className="min-h-screen bg-background" />} />
     <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
     <Route path="/" element={<ProtectedRoute allowGuest autoGuest><Index /></ProtectedRoute>} />
     <Route path="/image" element={<ProtectedRoute><ImageGen /></ProtectedRoute>} />
