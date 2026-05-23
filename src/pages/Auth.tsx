@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Zap, UserCircle2, Mail, Lock } from "lucide-react";
+import { Zap, UserCircle2, Mail, KeyRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,9 +16,9 @@ const Auth = () => {
   const navigate = useNavigate();
   
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [token, setToken] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
 
   useEffect(() => {
     if (isGuest) {
@@ -36,33 +36,50 @@ const Auth = () => {
 
   if (user) return <Navigate to="/" replace />;
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    if (!email) {
+      toast.error("Please enter your email address");
       return;
     }
 
     setAuthLoading(true);
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Registration successful! Check your email for confirmation.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Signed in successfully!");
-        navigate("/");
-      }
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+      if (error) throw error;
+      setShowOtpInput(true);
+      toast.success("Verification code sent! Please check your email.");
     } catch (error: any) {
-      toast.error(error.message || "An authentication error occurred");
+      toast.error(error.message || "Failed to send verification code");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) {
+      toast.error("Please enter the verification code");
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email",
+      });
+      if (error) throw error;
+      toast.success("Successfully authenticated!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message || "Invalid or expired code");
     } finally {
       setAuthLoading(false);
     }
@@ -88,63 +105,70 @@ const Auth = () => {
             <Zap size={22} />
           </div>
           <h1 className="text-xl font-semibold tracking-[-0.02em] text-foreground">
-            {isSignUp ? "Create an account" : "Welcome to ChitChat"}
+            {showOtpInput ? "Verify your email" : "Welcome to ChitChat"}
           </h1>
           <p className="text-xs text-muted-foreground font-mono">
-            {isSignUp ? "Enter your email to get started" : "Sign in to access your dashboard"}
+            {showOtpInput ? "Enter the 6-digit code sent to your inbox" : "Sign in or register securely with a code"}
           </p>
         </div>
 
-        <form onSubmit={handleEmailAuth} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={authLoading}
-                className="pl-9 bg-background"
-                required
-              />
+        {!showOtpInput ? (
+          <form onSubmit={handleRequestOtp} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={authLoading}
+                  className="pl-9 bg-background"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={authLoading}
-                className="pl-9 bg-background"
-                required
-              />
+            <Button type="submit" className="w-full h-10 mt-2" disabled={authLoading}>
+              {authLoading ? "Sending Code..." : "Continue with Email"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="token">Verification Code</Label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="token"
+                  type="text"
+                  placeholder="123456"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  disabled={authLoading}
+                  className="pl-9 bg-background tracking-widest font-mono text-center text-lg"
+                  maxLength={6}
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <Button type="submit" className="w-full h-10 mt-2" disabled={authLoading}>
-            {authLoading ? "Processing..." : isSignUp ? "Sign Up" : "Sign In"}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full h-10 mt-2" disabled={authLoading}>
+              {authLoading ? "Verifying..." : "Verify & Sign In"}
+            </Button>
 
-        <div className="text-center text-xs">
-          <button
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-primary hover:underline font-medium font-mono"
-            disabled={authLoading}
-          >
-            {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setShowOtpInput(false)}
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground hover:underline pt-1"
+              disabled={authLoading}
+            >
+              ← Back to email entry
+            </button>
+          </form>
+        )}
 
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-border" />
