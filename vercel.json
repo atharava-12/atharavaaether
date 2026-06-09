@@ -1,35 +1,23 @@
 {
-  "cleanUrls": true,
   "redirects": [
-    {
-      "source": "/signin",
-      "destination": "/auth",
-      "permanent": true
-    }
+    { "source": "/signin", "destination": "/auth", "permanent": true },
+    { "source": "/sign-in", "destination": "/auth", "permanent": true },
+    { "source": "/login", "destination": "/auth", "permanent": true }
   ],
   "rewrites": [
-    {
-      "source": "/((?!assets/|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\..*).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/((?!assets/|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\..*).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
       "source": "/index.html",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
-        }
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" }
       ]
     },
     {
       "source": "/assets/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
   ]
