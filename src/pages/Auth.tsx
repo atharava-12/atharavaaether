@@ -108,7 +108,7 @@ const Auth = () => {
             {showOtpInput ? "Verify your email" : "Welcome to ChitChat"}
           </h1>
           <p className="text-xs text-muted-foreground font-mono">
-            {showOtpInput ? "Enter the 6-digit code sent to your inbox" : "Sign in or register securely with a code"}
+            {showOtpInput ? "Enter the 8-digit code sent to your inbox" : "Sign in or register securely with a code"}
           </p>
         </div>
 
@@ -144,12 +144,12 @@ const Auth = () => {
                 <Input
                   id="token"
                   type="text"
-                  placeholder="123456"
+                  placeholder="12345678"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   disabled={authLoading}
                   className="pl-9 bg-background tracking-widest font-mono text-center text-lg"
-                  maxLength={6}
+                  maxLength={8}
                   required
                 />
               </div>
