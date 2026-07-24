@@ -2,14 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { Brain, Trash2, MessageSquare, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
-import { useGuestMode } from "@/hooks/useGuestMode";
 import BottomNav from "@/components/BottomNav";
 import SeoHead from "@/components/SeoHead";
 
 const Memory = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isGuest } = useGuestMode();
   const storage = useChatStorage(user?.id);
 
   const openChat = (id: string) => {
@@ -44,12 +42,6 @@ const Memory = () => {
       </header>
 
       <div className="flex-1 px-4 py-4 max-w-2xl mx-auto w-full pb-24">
-        {isGuest && (
-          <div className="mb-4 p-3 rounded-lg border border-border bg-card text-xs text-muted-foreground font-mono">
-            Guest mode: chats are stored only on this device.
-          </div>
-        )}
-
         {storage.conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <div className="w-12 h-12 rounded-lg bg-card border border-border flex items-center justify-center">

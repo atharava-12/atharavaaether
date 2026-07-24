@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
-import { Zap, Volume2, Plus, Settings as SettingsIcon, UserCircle2, Share2 } from "lucide-react";
+import { Zap, Volume2, Plus, Settings as SettingsIcon, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import InputBar from "@/components/InputBar";
@@ -14,14 +14,12 @@ import { useAether } from "@/hooks/useAether";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatStorage } from "@/hooks/useChatStorage";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { useGuestMode } from "@/hooks/useGuestMode";
 import { DEFAULT_MODEL_ID, getModel, type ModelId } from "@/lib/models";
 
 const MODEL_STORAGE_KEY = "chitchat:selectedModel";
 
 const Index = () => {
   const { user } = useAuth();
-  const { isGuest } = useGuestMode();
   const { messages, setMessages, isLoading, sendMessage, clearMessages } = useAether();
   const storage = useChatStorage(user?.id);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -132,11 +130,6 @@ const Index = () => {
         <div className="flex items-center gap-2">
           <Zap size={16} className="text-primary" />
           <span className="text-sm font-semibold tracking-[-0.02em]">ChitChat</span>
-          {isGuest && (
-            <span className="text-[9px] font-mono uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5 ml-1">
-              Guest
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -159,18 +152,6 @@ const Index = () => {
           </Link>
         </div>
       </header>
-
-      {/* GUEST BAR */}
-      {isGuest && (
-        <div className="px-4 py-2 bg-card border-b border-border text-[11px] text-muted-foreground font-mono flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5">
-            <UserCircle2 size={12} /> Guest mode — chats save on this device only.
-          </span>
-          <Link to="/auth" className="text-primary hover:underline">
-            Sign in
-          </Link>
-        </div>
-      )}
 
       {/* MAIN */}
       <main ref={scrollRef} className="flex-1 pb-32 px-4 max-w-3xl mx-auto w-full overflow-y-auto">

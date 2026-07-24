@@ -1,9 +1,6 @@
-export type ImageModelId =
-  | "gemini-flash-image"
-  | "gemini-flash-image-pro"
-  | "gemini-pro-image";
+export type ImageModelId = "nvidia-flux-2-klein";
 
-export type ImageProvider = "lovable" | "nvidia" | "hf-fal" | "hf-nscale";
+export type ImageProvider = "nvidia" | "hf-fal" | "hf-nscale";
 
 export interface ImageModelConfig {
   id: ImageModelId;
@@ -16,33 +13,17 @@ export interface ImageModelConfig {
 
 export const IMAGE_MODELS: ImageModelConfig[] = [
   {
-    id: "gemini-flash-image",
-    label: "Nano Banana",
-    provider: "lovable",
-    apiModel: "google/gemini-2.5-flash-image",
-    description: "Fast image generation and editing",
-    supportsEdit: true,
-  },
-  {
-    id: "gemini-flash-image-pro",
-    label: "Nano Banana 2",
-    provider: "lovable",
-    apiModel: "google/gemini-3.1-flash-image-preview",
-    description: "Fast pro-quality generation",
-    supportsEdit: true,
-  },
-  {
-    id: "gemini-pro-image",
-    label: "Nano Banana Pro",
-    provider: "lovable",
-    apiModel: "google/gemini-3-pro-image-preview",
-    description: "Highest quality generation",
-    supportsEdit: true,
+    id: "nvidia-flux-2-klein",
+    label: "NVIDIA Flux 2 Klein",
+    provider: "nvidia",
+    apiModel: "black-forest-labs/flux.2-klein-4b",
+    description: "Fast image generation with NVIDIA Flux.",
+    supportsEdit: false,
   },
 ];
 
-export const DEFAULT_IMAGE_MODEL_ID: ImageModelId = "gemini-flash-image";
+export const DEFAULT_IMAGE_MODEL_ID: ImageModelId = "nvidia-flux-2-klein";
 
 export const getImageModel = (id: string | null | undefined): ImageModelConfig =>
   IMAGE_MODELS.find((m) => m.id === id) ??
-  IMAGE_MODELS.find((m) => m.id === DEFAULT_IMAGE_MODEL_ID)!;
+  IMAGE_MODELS[0];

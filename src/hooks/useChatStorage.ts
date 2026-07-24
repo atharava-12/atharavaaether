@@ -1,21 +1,23 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { AetherMessage } from "@/hooks/useAether";
-import { useGuestMode, GUEST_STORAGE_KEYS } from "@/hooks/useGuestMode";
 
 interface Conv { id: string; title: string; updated_at: string }
 
+const GUEST_MESSAGES_KEY = "chitchat_guest_messages";
+const GUEST_CONVERSATIONS_KEY = "chitchat_guest_conversations";
+
 const readGuestConvs = (): Conv[] => {
-  try { return JSON.parse(localStorage.getItem(GUEST_STORAGE_KEYS.CONVERSATIONS) || "[]"); }
+  try { return JSON.parse(localStorage.getItem(GUEST_CONVERSATIONS_KEY) || "[]"); }
   catch { return []; }
 };
-const writeGuestConvs = (convs: Conv[]) => localStorage.setItem(GUEST_STORAGE_KEYS.CONVERSATIONS, JSON.stringify(convs));
-const guestMsgKey = (id: string) => `${GUEST_STORAGE_KEYS.MESSAGES}_${id}`;
+const writeGuestConvs = (convs: Conv[]) => localStorage.setItem(GUEST_CONVERSATIONS_KEY, JSON.stringify(convs));
+const guestMsgKey = (id: string) => `${GUEST_MESSAGES_KEY}_${id}`;
 
 const ACTIVE_KEY = "chitchat:activeConversationId";
 
 export function useChatStorage(userId: string | undefined) {
-  const { isGuest } = useGuestMode();
+  const localMode = !userId;
   const [conversations, setConversations] = useState<Conv[]>([]);
   const [activeConversationId, setActiveConversationIdState] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
@@ -43,7 +45,7 @@ export function useChatStorage(userId: string | undefined) {
   }, []);
 
   const loadConversations = useCallback(async () => {
-    if (isGuest) {
+    if (localMode) {
       setConversations(readGuestConvs().sort((a, b) => b.updated_at.localeCompare(a.updated_at)));
       return;
     }
@@ -55,12 +57,12 @@ export function useChatStorage(userId: string | undefined) {
       .order("updated_at", { ascending: false })
       .limit(50);
     if (data) setConversations(data);
-  }, [userId, isGuest]);
+  }, [userId, localMode]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
   const createConversation = useCallback(async (title: string = "New Chat"): Promise<string | null> => {
-    if (isGuest) {
+    if (localMode) {
       const id = crypto.randomUUID();
       const conv = { id, title, updated_at: new Date().toISOString() };
       writeGuestConvs([conv, ...readGuestConvs()]);
@@ -75,11 +77,11 @@ export function useChatStorage(userId: string | undefined) {
     setActiveConversationId(data.id);
     await loadConversations();
     return data.id;
-  }, [userId, isGuest, loadConversations]);
+  }, [userId, localMode, loadConversations]);
 
   const loadMessages = useCallback(async (conversationId: string): Promise<AetherMessage[]> => {
     setLoadingHistory(true);
-    if (isGuest) {
+    if (localMode) {
       setLoadingHistory(false);
       try { return JSON.parse(localStorage.getItem(guestMsgKey(conversationId)) || "[]"); }
       catch { return []; }
@@ -95,10 +97,10 @@ export function useChatStorage(userId: string | undefined) {
       meta: m.meta || undefined, isStreaming: false,
       timestamp: new Date(m.created_at).getTime(),
     }));
-  }, [isGuest]);
+  }, [localMode]);
 
   const saveMessage = useCallback(async (conversationId: string, msg: AetherMessage) => {
-    if (isGuest) {
+    if (localMode) {
       const key = guestMsgKey(conversationId);
       const existing: AetherMessage[] = JSON.parse(localStorage.getItem(key) || "[]");
       const filtered = existing.filter((m) => m.id !== msg.id);
@@ -121,10 +123,10 @@ export function useChatStorage(userId: string | undefined) {
     const updates: Record<string, string> = { updated_at: new Date().toISOString() };
     if (msg.role === "user") updates.title = msg.content.slice(0, 60);
     await supabase.from("conversations").update(updates).eq("id", conversationId);
-  }, [userId, isGuest, loadConversations]);
+  }, [userId, localMode, loadConversations]);
 
   const deleteConversation = useCallback(async (conversationId: string) => {
-    if (isGuest) {
+    if (localMode) {
       writeGuestConvs(readGuestConvs().filter((c) => c.id !== conversationId));
       localStorage.removeItem(guestMsgKey(conversationId));
     } else {
@@ -132,10 +134,10 @@ export function useChatStorage(userId: string | undefined) {
     }
     if (activeConversationId === conversationId) setActiveConversationId(null);
     await loadConversations();
-  }, [activeConversationId, loadConversations, isGuest]);
+  }, [activeConversationId, loadConversations, localMode]);
 
   const clearAllConversations = useCallback(async () => {
-    if (isGuest) {
+    if (localMode) {
       readGuestConvs().forEach((c) => localStorage.removeItem(guestMsgKey(c.id)));
       writeGuestConvs([]);
     } else if (userId) {
@@ -143,7 +145,7 @@ export function useChatStorage(userId: string | undefined) {
     }
     setActiveConversationId(null);
     setConversations([]);
-  }, [userId, isGuest]);
+  }, [userId, localMode]);
 
   return {
     conversations, activeConversationId, setActiveConversationId, loadingHistory,
