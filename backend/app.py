@@ -98,7 +98,12 @@ def provider_target(requested_model: str) -> tuple[str, str, str | None]:
     if AI_PROVIDER == "nvidia":
         if not NVIDIA_API_KEY:
             raise HTTPException(status_code=503, detail="Cloud inference is not configured")
-        model_id = requested_model if requested_model in NVIDIA_MODEL_IDS else "nemotron-super"
+        if requested_model == "chitchat-local":
+            model_id = "nemotron-super"
+        elif requested_model in NVIDIA_MODEL_IDS:
+            model_id = requested_model
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported model ID")
         return (
             f"{NVIDIA_BASE_URL}/chat/completions",
             NVIDIA_MODEL_IDS[model_id],
@@ -126,7 +131,12 @@ async def health() -> dict[str, str]:
 
 @app.get("/v1/models")
 async def list_models(_: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
-    ids = list(NVIDIA_MODEL_IDS) if AI_PROVIDER == "nvidia" else ["chitchat-local"]
+    if AI_PROVIDER == "nvidia":
+        ids = list(NVIDIA_MODEL_IDS)
+    elif AI_PROVIDER == "openai-compatible":
+        ids = ["chitchat-cloud"]
+    else:
+        ids = ["chitchat-local"]
     return {
         "object": "list",
         "data": [{"id": model_id, "object": "model", "owned_by": "chitchatgen"} for model_id in ids],
