@@ -4,11 +4,11 @@ This is the first backend step: a FastAPI gateway that checks a Supabase access 
 
 ## Local setup
 
-1. Install Ollama and make sure your laptop can run a model that fits its memory.
-2. In one terminal, download a model supported by your Ollama installation and start Ollama. For the default below:
+1. Install Ollama. For this 16 GB Mac, start with qwen3.5:4b; the Ollama library lists it at about 3.3–4.0 GB.
+2. In one terminal, download and start the configured starter model:
 
    ```sh
-   ollama pull qwen3.5
+   ollama pull qwen3.5:4b
    ollama serve
    ```
 
@@ -22,7 +22,7 @@ This is the first backend step: a FastAPI gateway that checks a Supabase access 
    cp .env.example .env
    ```
 
-4. Fill `.env` with the project URL and publishable key from Supabase. Keep real values out of Git.
+4. Fill `.env` with the project URL and publishable key from Supabase. Keep real values out of Git. The model setting should be `OLLAMA_MODEL=qwen3.5:4b`.
 5. Start the API:
 
    ```sh
