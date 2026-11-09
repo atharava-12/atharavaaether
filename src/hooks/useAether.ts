@@ -115,7 +115,7 @@ export function useAether() {
           content: m.content,
         }));
 
-      const aiApiBase = import.meta.env.VITE_AI_API_BASE_URL?.trim().replace(/\\/+$/, "");
+      const aiApiBase = import.meta.env.VITE_AI_API_BASE_URL?.trim().replace(/\/+$/, "");
       let accessToken: string | undefined;
       if (aiApiBase) {
         const { data: { session } } = await supabase.auth.getSession();
