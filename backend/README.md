@@ -48,6 +48,11 @@ Deploy the backend project to get a public API URL, then optionally attach `api.
 
 NVIDIA's API Catalog offers NIM endpoint access to Developer Program members for prototyping; availability and limits can change. The local Ollama mode is not used by this public deployment.
 
+
+## Connect the existing frontend
+
+After the backend has deployed, set `VITE_AI_API_BASE_URL` in the existing frontend Vercel project's environment variables to the backend URL (for example, `https://your-api.vercel.app`) and redeploy the frontend. Signed-in chat requests will then use FastAPI with the user's Supabase access token. Signed-out guest chat keeps using the existing Supabase Edge Function for now, so the current guest experience continues during this first migration step.
+
 ## Current scope
 
 This first public-capable slice handles authenticated, streaming text chat. It does not yet persist chats through the API or implement image uploads, vision, image generation, voice, research, or math routes. Those remain follow-up steps. Do not expose Ollama on the public internet.
