@@ -1,18 +1,21 @@
-# ChitChatGen AI API (first slice)
+# ChitChatGen AI API
 
-This is the first backend step: a FastAPI gateway that checks a Supabase access token and streams chat completions from a locally running Ollama instance. The existing Vite frontend and Supabase database are not changed by this service.
+This FastAPI service is designed for two modes:
 
-## Local setup
+- **Local development:** Ollama runs on the developer's computer.
+- **Public service:** FastAPI is deployed on Vercel and calls cloud inference. Users reach it from any device through the public API URL; their devices do not need Ollama or a local model.
 
-1. Install Ollama. For this 16 GB Mac, start with qwen3.5:4b; the Ollama library lists it at about 3.3–4.0 GB.
-2. In one terminal, download and start the configured starter model:
+The existing Vite frontend remains its own Vercel project. Deploy this folder as a separate Vercel project with **Root Directory** set to `backend`. That keeps the existing static-site configuration separate from the Python API.
+
+## Local development
+
+1. Install Ollama and download the starter model:
 
    ```sh
    ollama pull qwen3.5:4b
-   ollama serve
    ```
 
-3. In a second terminal:
+2. In the backend terminal:
 
    ```sh
    cd backend
@@ -22,20 +25,29 @@ This is the first backend step: a FastAPI gateway that checks a Supabase access 
    cp .env.example .env
    ```
 
-4. Fill `.env` with the project URL and publishable key from Supabase. Keep real values out of Git. The model setting should be `OLLAMA_MODEL=qwen3.5:4b`.
-5. Start the API:
+3. Fill `.env` with the Supabase project URL and publishable key. Leave `AI_PROVIDER=ollama` and `OLLAMA_MODEL=qwen3.5:4b`.
+4. Start the API:
 
    ```sh
    uvicorn app:app --reload
    ```
 
-The API is at `http://127.0.0.1:8000`; health is `/health`. Chat routes require a real Supabase user access token:
+The local API listens at `http://127.0.0.1:8000`. Its health endpoint is `/health`; chat is `POST /v1/chat/completions`. Chat requests require a valid Supabase user access token.
 
-- `GET /v1/models`
-- `POST /v1/chat/completions` (OpenAI-compatible SSE stream; requires `stream: true`)
+## Public deployment
 
-The only enabled public model ID is `chitchat-local`. It maps server-side to `OLLAMA_MODEL`; clients cannot select a provider URL or pass a provider secret.
+Create a **separate Vercel project** connected to this repository and set its Root Directory to `backend`. Configure these environment variables in that project's settings:
 
-## Current limits
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `AI_PROVIDER=nvidia`
+- `NVIDIA_API_KEY` (server-side secret)
+- `ALLOWED_ORIGINS=https://chitchatgen.com,https://www.chitchatgen.com`
 
-This is an initial development gateway. It does not yet save messages, support uploads, or expose vision, image, voice, research, or math routes. The current browser chat hook is not connected to it yet. Do not expose the laptop's Ollama port or this development API directly to the public internet. Production deployment, user-level rate limits, database persistence, and frontend integration are later steps.
+Deploy the backend project to get a public API URL, then optionally attach `api.chitchatgen.com`. The frontend must be configured to call that URL in a later integration step. Do not expose a provider key in Vite variables or browser code.
+
+NVIDIA's API Catalog offers NIM endpoint access to Developer Program members for prototyping; availability and limits can change. The local Ollama mode is not used by this public deployment.
+
+## Current scope
+
+This first public-capable slice handles authenticated, streaming text chat. It does not yet persist chats through the API or implement image uploads, vision, image generation, voice, research, or math routes. Those remain follow-up steps. Do not expose Ollama on the public internet.
