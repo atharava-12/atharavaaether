@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
 SUPABASE_PUBLISHABLE_KEY = os.environ["SUPABASE_PUBLISHABLE_KEY"]
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1").rstrip("/")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3.5")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3.5:4b")
 ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
