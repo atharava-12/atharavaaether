@@ -115,14 +115,23 @@ export function useAether() {
           content: m.content,
         }));
 
-      const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aether-chat`;
+      const aiApiBase = import.meta.env.VITE_AI_API_BASE_URL?.trim().replace(/\\/+$/, "");
+      let accessToken: string | undefined;
+      if (aiApiBase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        accessToken = session?.access_token;
+      }
+      const useFastApi = Boolean(aiApiBase && accessToken);
+      const chatUrl = useFastApi
+        ? `${aiApiBase}/v1/chat/completions`
+        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aether-chat`;
       abortRef.current = new AbortController();
 
       const resp = await fetch(chatUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${useFastApi ? accessToken : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
           messages: [...conversationHistory, { role: "user", content: input }],
@@ -135,6 +144,7 @@ export function useAether() {
         const errData = await resp.json().catch(() => null);
         const message =
           errData?.error ||
+          errData?.detail ||
           (resp.status === 402
             ? "AI credits are exhausted. Add funds in Settings → Workspace → Usage."
             : resp.status === 429
