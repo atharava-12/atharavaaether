@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, ArrowRight, Check, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 const INTEREST_OPTIONS = [
   "Technology", "Science", "Art & Design", "Music",
@@ -32,18 +33,21 @@ const Onboarding = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabase
+      const { error } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          id: user.id,
           display_name: displayName.trim() || null,
           interests: selectedInterests,
           onboarding_complete: true,
-        } as any)
-        .eq("id", user.id);
+        });
+      if (error) throw error;
       // Trigger first-run feature tour on Index
       localStorage.removeItem("chitchat:tourSeen");
       navigate("/?tour=1", { replace: true });
-    } catch {
+    } catch (error) {
+      console.error("Unable to save onboarding profile:", error);
+      toast.error("Could not save your profile. Please try again.");
       setSaving(false);
     }
   };

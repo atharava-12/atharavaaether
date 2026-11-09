@@ -14,7 +14,6 @@ const STEPS: Step[] = [
   { selector: '[data-tour="settings"]', title: "Settings", desc: "Manage your account, theme, and preferences." },
   { selector: '[data-tour="input"]', title: "Ask Anything", desc: "Type your question or use voice input to chat with AI." },
   { selector: '[data-tour="nav-image"]', title: "Image Generation", desc: "Create or edit images with AI. They'll be saved to your chat memory." },
-  { selector: '[data-tour="nav-memory"]', title: "Memory", desc: "All your past chats and generated images live here." },
 ];
 
 const TOUR_KEY = "chitchat:tourSeen";

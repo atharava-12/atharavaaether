@@ -5,6 +5,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import BottomNav from "@/components/BottomNav";
 import SeoHead from "@/components/SeoHead";
+import OperationsDashboard from "@/components/OperationsDashboard";
+import AdminDashboardPanel from "@/components/AdminDashboardPanel";
+import ActivityStreamPanel from "@/components/ActivityStreamPanel";
+import LaunchPipelinePanel from "@/components/LaunchPipelinePanel";
+import UsagePanel from "@/components/UsagePanel";
 import { toast } from "sonner";
 
 const Settings = () => {
@@ -27,7 +32,7 @@ const Settings = () => {
     setDeleting(false);
 
     if (error) {
-      toast.error("Failed to delete account. Please try again.");
+      toast.error(error.message || "Failed to delete account. Please try again.");
     } else {
       toast.success("Account deleted successfully.");
       navigate("/");
@@ -56,6 +61,12 @@ const Settings = () => {
           <p className="text-sm font-medium text-foreground truncate">{user?.email ?? "Anonymous"}</p>
           <p className="text-xs text-muted-foreground font-mono mt-1">{user ? "Signed in" : "Anonymous mode"}</p>
         </div>
+
+        <UsagePanel />
+        <OperationsDashboard />
+        <AdminDashboardPanel />
+        <ActivityStreamPanel />
+        <LaunchPipelinePanel />
 
         {/* Appearance */}
         <button

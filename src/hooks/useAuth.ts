@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import type { User, Session } from "@supabase/supabase-js";
 
 const isNative = () => Capacitor.isNativePlatform();
+const ACTIVE_CONVERSATION_KEY = "chitchat:activeConversationId";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -20,11 +21,17 @@ export function useAuth() {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      })
+      .catch((error) => {
+        console.error("Unable to restore the auth session:", error);
+        setSession(null);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
 
     // Handle deep-link return from in-app browser on native
     let appListener: { remove: () => void } | null = null;
@@ -46,7 +53,7 @@ export function useAuth() {
     };
   }, []);
 
-  const openOAuth = useCallback(async (provider: "google" | "apple") => {
+  const openOAuth = useCallback(async (provider: "google" | "github") => {
     const isLovableSandbox = typeof window !== "undefined" && window.location.hostname.endsWith(".lovable.app");
 
     if (isNative()) {
@@ -62,7 +69,7 @@ export function useAuth() {
         });
 
         let result;
-        if (isLovableSandbox) {
+        if (isLovableSandbox && provider === "google") {
           result = await lovable.auth.signInWithOAuth(provider, {
             redirect_uri: window.location.origin,
           });
@@ -88,7 +95,7 @@ export function useAuth() {
       }
     }
 
-    if (isLovableSandbox) {
+    if (isLovableSandbox && provider === "google") {
       // In the Lovable sandbox, use Lovable's OAuth broker proxy
       const { error } = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
@@ -107,17 +114,65 @@ export function useAuth() {
   }, []);
 
   const signInWithGoogle = useCallback(() => openOAuth("google"), [openOAuth]);
-  const signInWithApple = useCallback(() => openOAuth("apple"), [openOAuth]);
+  const signInWithGitHub = useCallback(() => openOAuth("github"), [openOAuth]);
+  const signInWithEmail = useCallback(async (email: string) => {
+    let timeoutId: number | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(
+        () => reject(new Error("Email verification is taking too long. Check that email sign-in and SMTP are configured in Supabase, then try again.")),
+        20_000
+      );
+    });
+
+    try {
+      return await Promise.race([supabase.auth.signInWithOtp({ email }), timeout]);
+    } finally {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    }
+  }, []);
+  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
+    return { error };
+  }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) return { error };
+    window.localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
+    window.dispatchEvent(new CustomEvent("chitchat:active-conversation-changed", { detail: null }));
+    return { error: null };
   }, []);
 
   const deleteAccount = useCallback(async () => {
     const { error } = await supabase.functions.invoke("delete-account");
     if (!error) await supabase.auth.signOut();
-    return { error };
+    if (!error) return { error: null };
+
+    let message = error.message || "Account deletion failed.";
+    if ("context" in error && error.context instanceof Response) {
+      try {
+        const body = await error.context.clone().json();
+        if (typeof body?.error === "string") message = body.error;
+      } catch {
+        // Keep the function client's message when no JSON error is available.
+      }
+    }
+    return { error: new Error(message) };
   }, []);
 
-  return { user, session, loading, signInWithGoogle, signInWithApple, signOut, deleteAccount };
+  return {
+    user,
+    session,
+    loading,
+    signInWithEmail,
+    verifyEmailOtp,
+    signInWithGitHub,
+    signInWithGoogle,
+    signOut,
+    deleteAccount,
+  };
 }

@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { parseChatStreamLine } from "@/lib/chatStream";
+import { addImageTextOverlay, parseImageTextRequest } from "@/lib/imageText";
 import { toast } from "sonner";
 
 export interface AetherMessage {
@@ -14,6 +16,11 @@ export interface AetherMessage {
   timestamp: number;
 }
 
+export interface OnboardingPreferences {
+  displayName: string | null;
+  interests: string[];
+}
+
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error && error.message) return error.message;
   return fallback;
@@ -25,9 +32,19 @@ export function useAether() {
   const [latency, setLatency] = useState<number | undefined>();
   const abortRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (input: string, mode: "chat" | "image", modelId?: string, modelLabel?: string) => {
+  const sendMessage = useCallback(async (
+    input: string,
+    mode: "chat" | "image",
+    modelId?: string,
+    modelLabel?: string,
+    personalization?: OnboardingPreferences,
+    historyOverride?: AetherMessage[],
+    userMessageId?: string,
+    provider?: "nvidia" | "hf" | "openai" | "anthropic" | "google" | "custom",
+    fallbackProvider?: "nvidia" | "hf" | "openai" | "anthropic" | "google" | "custom",
+  ) => {
     const userMsg: AetherMessage = {
-      id: crypto.randomUUID(),
+      id: userMessageId ?? crypto.randomUUID(),
       role: "user",
       content: input,
       type: "text",
@@ -50,25 +67,43 @@ export function useAether() {
           type: "image",
           mode: "image",
           isStreaming: true,
-          meta: "MODEL: gemini-2.5-flash-image",
+          meta: "MODEL: NVIDIA Flux 2 Klein",
           timestamp: Date.now(),
         },
       ]);
 
       try {
+        const safePrompt = input.trim();
+        if (!safePrompt) {
+          throw new Error("Please enter a description of the image you want to create.");
+        }
+        const textRequest = parseImageTextRequest(safePrompt);
+
         const { data, error } = await supabase.functions.invoke("aether-image", {
-          body: { prompt: input },
+          body: {
+            prompt: textRequest?.backgroundPrompt ?? safePrompt,
+            provider: "nvidia",
+            model: "black-forest-labs/flux.2-klein-4b",
+          },
         });
 
         if (error) {
-          throw new Error(error.message || "Image generation failed. Please try again.");
+          throw new Error("Image generation is temporarily unavailable. Please try again.");
         }
+
+        if (!data?.imageUrl) {
+          throw new Error("Image generation failed. Please try again.");
+        }
+
+        const imageUrl = textRequest
+          ? await addImageTextOverlay(data.imageUrl, textRequest.text)
+          : data.imageUrl;
 
         setLatency(Date.now() - startTime);
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
-              ? { ...m, imageUrl: data.imageUrl, isStreaming: false }
+              ? { ...m, imageUrl, isStreaming: false }
               : m
           )
         );
@@ -108,7 +143,7 @@ export function useAether() {
     ]);
 
     try {
-      const conversationHistory = messages
+      const conversationHistory = (historyOverride ?? messages)
         .filter((m) => m.mode === "chat")
         .map((m) => ({
           role: m.role as "user" | "assistant",
@@ -131,11 +166,16 @@ export function useAether() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${useFastApi ? accessToken : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+"Content-Type": "application/json",
+apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+Authorization: `Bearer ${useFastApi ? accessToken : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
           messages: [...conversationHistory, { role: "user", content: input }],
           modelId: modelId ?? "nemotron-super",
+          provider: provider ?? "nvidia",
+          fallbackProvider: fallbackProvider ?? "nvidia",
+          personalization,
         }),
         signal: abortRef.current.signal,
       });
@@ -157,6 +197,19 @@ export function useAether() {
       const decoder = new TextDecoder();
       let textBuffer = "";
       let streamDone = false;
+      let streamError: string | undefined;
+
+      const processStreamLine = (line: string) => {
+        const event = parseChatStreamLine(line);
+        streamError = event.error ?? streamError;
+        if (event.content) {
+          fullContent += event.content;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: fullContent } : m))
+          );
+        }
+        return event.done;
+      };
 
       while (!streamDone) {
         const { done, value } = await reader.read();
@@ -168,58 +221,20 @@ export function useAether() {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
 
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullContent += content;
-              setMessages((prev) =>
-                prev.map((m) => (m.id === assistantId ? { ...m, content: fullContent } : m))
-              );
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
+          if (line.startsWith(":")) continue;
+          streamDone = processStreamLine(line);
+          if (streamDone) break;
         }
       }
 
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split("\n")) {
-          if (!raw) continue;
-          if (raw.endsWith("\r")) raw = raw.slice(0, -1);
-          if (raw.startsWith(":") || raw.trim() === "") continue;
-          if (!raw.startsWith("data: ")) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === "[DONE]") continue;
+      textBuffer += decoder.decode();
 
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullContent += content;
-              setMessages((prev) =>
-                prev.map((m) => (m.id === assistantId ? { ...m, content: fullContent } : m))
-              );
-            }
-          } catch {
-            // Ignore partial leftovers after stream completion.
-          }
-        }
+      if (textBuffer.trim()) {
+        for (const line of textBuffer.split("\n")) processStreamLine(line);
       }
 
       if (!fullContent.trim()) {
-        throw new Error("ChitChat did not return a response. Please try again.");
+        throw new Error(streamError ?? "ChitChat did not return a response. Please try again.");
       }
 
       setLatency(Date.now() - startTime);

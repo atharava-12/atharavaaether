@@ -1,16 +1,14 @@
 import { NavLink } from "react-router-dom";
-import { MessageSquare, Image as ImageIcon, Brain } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", label: "Chat", icon: MessageSquare, tour: "nav-chat" },
-  { to: "/image", label: "Image", icon: ImageIcon, tour: "nav-image" },
-  { to: "/memory", label: "Memory", icon: Brain, tour: "nav-memory" },
 ];
 
 const BottomNav = () => (
-  <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border">
-    <div className="flex items-center justify-around max-w-2xl mx-auto px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+  <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#07101c]/95 backdrop-blur-xl md:hidden">
+    <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {tabs.map(({ to, label, icon: Icon, tour }) => (
         <NavLink
           key={to}
@@ -19,8 +17,8 @@ const BottomNav = () => (
           data-tour={tour}
           className={({ isActive }) =>
             cn(
-              "flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-colors min-w-[60px]",
-              isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              "flex min-w-[60px] flex-col items-center gap-1 rounded-xl px-4 py-1.5 transition-colors",
+              isActive ? "text-cyan-300" : "text-slate-400 hover:text-slate-100"
             )
           }
         >

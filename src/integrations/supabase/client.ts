@@ -2,16 +2,67 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  (PROJECT_ID ? `https://${PROJECT_ID}.supabase.co` : '');
+const SUPABASE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  '';
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+const hasRequiredSupabaseConfig = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+if (!SUPABASE_URL) {
+  console.error('Missing Supabase URL. Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_ID.');
+}
+
+if (!SUPABASE_PUBLISHABLE_KEY) {
+  console.error('Missing Supabase publishable key. Set VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY.');
+}
+
+const createNoopSupabaseClient = () => ({
   auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
+    onAuthStateChange: () => ({
+      data: { subscription: { unsubscribe: () => undefined } },
+      error: null,
+    }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    signInWithOAuth: async () => ({ data: null, error: null }),
+    signInWithOtp: async () => ({ data: null, error: { message: 'Supabase is not configured for this environment.' } }),
+    verifyOtp: async () => ({ data: null, error: { message: 'Supabase is not configured for this environment.' } }),
+    signOut: async () => ({ error: null }),
+    setSession: async () => ({ data: null, error: null }),
+  },
+  functions: {
+    invoke: async () => ({ data: null, error: { message: 'Supabase is not configured for this environment.' } }),
+  },
+  from: () => ({
+    select: () => ({ data: [], error: null }),
+    insert: () => ({ data: null, error: null }),
+    update: () => ({ data: null, error: null }),
+    delete: () => ({ data: null, error: null }),
+    eq: () => ({ data: [], error: null }),
+    order: () => ({ data: [], error: null }),
+    limit: () => ({ data: [], error: null }),
+    single: () => ({ data: null, error: null }),
+  }),
+  storage: {
+    from: () => ({
+      upload: async () => ({ data: null, error: null }),
+      download: async () => ({ data: null, error: null }),
+      remove: async () => ({ data: null, error: null }),
+      list: async () => ({ data: [], error: null }),
+    }),
+  },
 });
+
+export const supabase = hasRequiredSupabaseConfig
+  ? createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        storage: localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    })
+  : createNoopSupabaseClient() as ReturnType<typeof createClient<Database>>;

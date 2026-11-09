@@ -38,8 +38,71 @@ export type Database = {
         }
         Relationships: []
       }
+      image_generations: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          generation_type: string
+          height: number | null
+          id: string
+          image_path: string
+          mime_type: string
+          model_id: string
+          original_image_path: string | null
+          prompt: string
+          provider: string
+          seed: number | null
+          session_id: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          generation_type: string
+          height?: number | null
+          id?: string
+          image_path: string
+          mime_type: string
+          model_id: string
+          original_image_path?: string | null
+          prompt: string
+          provider: string
+          seed?: number | null
+          session_id?: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          generation_type?: string
+          height?: number | null
+          id?: string
+          image_path?: string
+          mime_type?: string
+          model_id?: string
+          original_image_path?: string | null
+          prompt?: string
+          provider?: string
+          seed?: number | null
+          session_id?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_generations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
+          attachments: Json
           content: string
           conversation_id: string
           created_at: string
@@ -51,6 +114,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: Json
           content?: string
           conversation_id: string
           created_at?: string
@@ -62,6 +126,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachments?: Json
           content?: string
           conversation_id?: string
           created_at?: string
