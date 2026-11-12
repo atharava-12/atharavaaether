@@ -166,7 +166,6 @@ export function useAether() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-"Content-Type": "application/json",
 apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
 Authorization: `Bearer ${useFastApi ? accessToken : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },

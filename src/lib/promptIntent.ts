@@ -1,0 +1,3 @@
+const IMAGE_INTENT = /\b(draw|paint|sketch)\b|\b(generate|create|make|render|design|visualize|imagine|want|request|show\s+me)\b[\s\S]{0,80}\b(an?\s+)?(image|picture|photo|illustration|artwork|logo|wallpaper)\b|\b(image|picture|photo|illustration|artwork|logo|wallpaper)\b[\s\S]{0,80}\b(generate|create|make|render|design|want|request)\b/i;
+
+export const isImagePrompt = (prompt: string) => IMAGE_INTENT.test(prompt.trim());
